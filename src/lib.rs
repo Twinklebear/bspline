@@ -17,6 +17,8 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> BSpline<T> {
     /// order, otherwise they will be sorted for you which may lead to undesired knots
     /// for control points
     pub fn new(degree: usize, control_points: Vec<T>, mut knots: Vec<f32>) -> BSpline<T> {
+        // TODO: Maybe a ctor for cardinal curves that will check we have the right number of
+        // knots? Is this check correct?
         if control_points.len() < degree {
             panic!("Too few control points for curve");
         }
@@ -43,8 +45,8 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> BSpline<T> {
             None => self.knots.len() - self.degree - 1,
         };
         */
-        println!("Found i = {} for t = {}\n\tknots = {:?}", i, t, self.knots);
-        println!("degree = {}", self.degree);
+        //println!("Found i = {} for t = {}\n\tknots = {:?}", i, t, self.knots);
+        //println!("degree = {}", self.degree);
         self.de_boors(t, self.degree, i)
     }
     /// Recursively compute de Boor's B-spline algorithm. TODO: This is terrible,
@@ -52,12 +54,12 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> BSpline<T> {
     /// of the initial implementation.
     fn de_boors(&self, t: f32, k: usize, i: usize) -> T {
         if k == 0 {
-            println!("Returning control point {}", i);
+            //println!("Returning control point {}", i);
             self.control_points[i - 1]
         } else {
-            println!("Looking at k = {}, i = {}, t = {}", k, i, t);
-            println!("\tknots[i + self.degree - k] = {}, self.knots[i - 1] = {}",
-                     self.knots[i + self.degree - k], self.knots[i - 1]);
+            //println!("Looking at k = {}, i = {}, t = {}", k, i, t);
+            //println!("\tknots[i + self.degree - k] = {}, self.knots[i - 1] = {}",
+            //         self.knots[i + self.degree - k], self.knots[i - 1]);
             // TODO: This is still broken
             let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
             self.de_boors(t, k - 1, i - 1) * (1.0 - alpha) + self.de_boors(t, k - 1, i) * alpha
@@ -145,7 +147,7 @@ mod test {
     }
 
     //#[test]
-    fn linear_bspline(){
+    fn linear_bspline() {
         let points = vec![Point::new(-1.0, 0.0), Point::new(0.0, 1.0),
                           Point::new(1.0, 1.0), Point::new(1.0, 2.0)];
         let knots = vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0];
@@ -155,7 +157,7 @@ mod test {
         assert!(x.x == 0.5 && x.y == 1.0);
     }
     //#[test]
-    fn quadratic_bspline(){
+    fn quadratic_bspline() {
         let points = vec![Point::new(-2.0, 0.0), Point::new(0.0, 2.0),
                           Point::new(2.0, 0.0), Point::new(0.0, -2.0)];
         let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0];
@@ -164,19 +166,19 @@ mod test {
         println!("spline(1.5) = {:?}", x);
         assert!(x.x == 1.25 && x.y == -0.25);
     }
-    //#[test]
-    fn bspline_plot(){
-        let points = vec![Pointi::new(0, 5), Pointi::new(10, 20),
-                          Pointi::new(30, 20), Pointi::new(39, 5)];
-        let knots = vec![0.0, 0.0, 0.1, 1.0, 1.9, 2.0, 2.0];
+    #[test]
+    fn bspline_plot() {
+        let points = vec![Pointi::new(0, 5), Pointi::new(9, 20),
+                          Pointi::new(29, 20), Pointi::new(39, 5)];
+        let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0];
 
         // TODO: This doesn't compute or plot the correct curve
         let plot_w = 80;
         let plot_h = 50;
         let mut plot: Vec<_> = iter::repeat(' ').take(plot_w * plot_h).collect();
 
-        let t_start = knots[2];
-        let t_end = knots[4];
+        let t_start = knots[0];
+        let t_end = knots[knots.len() - 1];
         println!("Starting at {}, ending at {}", t_start, t_end);
         let spline = BSpline::new(2, points.clone(), knots);
 
@@ -229,7 +231,7 @@ mod test {
         let t = 0.5;
         println!("spline({}) = {}", t, spline.point(t));
     }
-    #[test]
+    //#[test]
     fn quartic_bspline_plot1d() {
         let points = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
         let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
