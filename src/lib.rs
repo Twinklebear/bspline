@@ -31,6 +31,8 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> BSpline<T> {
             Some(x) => x,
             None => self.knots.len() - self.degree - 1,
         };
+        println!("Found i = {} for t = {}\n\tknots = {:?}", i, t, self.knots);
+        println!("degree = {}", self.degree);
         self.de_boors(t, self.degree, i)
     }
     /// Recursively compute de Boor's B-spline algorithm. TODO: This is terrible,
@@ -40,11 +42,12 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> BSpline<T> {
         if k == 0 {
             self.control_points[i]
         } else {
-            println!("Looking at k = {}, i = {}", k, i);
-            let denom = self.knots[i + self.degree - k] - self.knots[i - 1];
-            let a = (self.knots[i + self.degree - k] - t) / denom;
-            let b = (t - self.knots[i - 1]) / denom;
-            self.de_boors(t, k - 1, i - 1) * a + self.de_boors(t, k - 1, i) * b
+            println!("Looking at k = {}, i = {}, t = {}", k, i, t);
+            println!("\tknots[i + self.degree + 1 - k] = {}, self.knots[i] = {}",
+                     self.knots[i + self.degree + 1 - k], self.knots[i]);
+            // TODO: This is still broken
+            let alpha = (t - self.knots[i]) / (self.knots[i + self.degree + 1 - k] - self.knots[i]);
+            self.de_boors(t, k - 1, i - 1) * (1.0 - alpha) + self.de_boors(t, k - 1, i) * alpha
         }
     }
 }
@@ -132,7 +135,7 @@ mod test {
     fn linear_bspline(){
         let points = vec![Point::new(-1.0, 0.0), Point::new(0.0, 1.0),
                           Point::new(1.0, 1.0), Point::new(1.0, 2.0)];
-        let knots = vec![0.0, 1.0, 2.0, 3.0];
+        let knots = vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0];
         let spline = BSpline::new(1, points, knots);
         let x = spline.point(1.5);
         println!("spline(1.5) = {:?}", x);
@@ -141,20 +144,23 @@ mod test {
 
     #[test]
     fn bspline_plot(){
-        let points = vec![Pointi::new(10, 10), Pointi::new(20, 20), Pointi::new(10, 20)];
-        let knots = vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0];
-        let spline = BSpline::new(2, points, knots);
-        let x = spline.point(1.5);
-        println!("spline(1.5) = {:?}", x);
+        let points = vec![Pointi::new(0, 5), Pointi::new(20, 20), Pointi::new(39, 5)];
+        let knots = vec![0.0, 0.0, 0.5, 2.5, 3.0, 3.0];
 
         // TODO: This doesn't compute or plot the correct curve
         let plot_w = 40;
         let plot_h = 40;
         let mut plot: Vec<_> = iter::repeat(' ').take(plot_w * plot_h).collect();
 
+        plot[(plot_h - 1 - points[0].y as usize) * plot_w + points[0].x as usize] = 'S';
+        plot[(plot_h - 1 - points[1].y as usize) * plot_w + points[1].x as usize] = 'C';
+        plot[(plot_h - 1 - points[2].y as usize) * plot_w + points[2].x as usize] = 'E';
+
+        let spline = BSpline::new(2, points, knots);
+
         let t_start = 1.0;
         let t_end = 2.0;
-        let steps = 10;
+        let steps = 50;
         let step_size = (t_end - t_start) / steps as f32;
         for s in 0..steps {
             let t = step_size * s as f32 + t_start;
