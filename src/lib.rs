@@ -154,7 +154,6 @@ mod test {
         println!("spline(1.5) = {:?}", x);
         assert!(x.x == 0.5 && x.y == 1.0);
     }
-
     //#[test]
     fn quadratic_bspline(){
         let points = vec![Point::new(-2.0, 0.0), Point::new(0.0, 2.0),
@@ -165,7 +164,6 @@ mod test {
         println!("spline(1.5) = {:?}", x);
         assert!(x.x == 1.25 && x.y == -0.25);
     }
-
     //#[test]
     fn bspline_plot(){
         let points = vec![Pointi::new(0, 5), Pointi::new(10, 20),
@@ -209,16 +207,37 @@ mod test {
             println!("");
         }
     }
-
-    #[test]
-    fn bspline_plot1d() {
+    //#[test]
+    fn quadratic_bspline_plot1d() {
         let points = vec![0.0, 0.0, 1.0, 0.0, 0.0];
         let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
-        let t_start = knots[2];
-        let t_end = knots[5];
+        let t_start = knots[0];
+        let t_end = knots[knots.len() - 1];
         println!("Starting at {}, ending at {}", t_start, t_end);
         let spline = BSpline::new(2, points, knots);
         let t = 0.5;
+        println!("spline({}) = {}", t, spline.point(t));
+    }
+    //#[test]
+    fn cubic_bspline_plot1d() {
+        let points = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0];
+        let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
+        let t_start = knots[0];
+        let t_end = knots[knots.len() - 1];
+        println!("Starting at {}, ending at {}", t_start, t_end);
+        let spline = BSpline::new(3, points, knots);
+        let t = 0.5;
+        println!("spline({}) = {}", t, spline.point(t));
+    }
+    #[test]
+    fn quartic_bspline_plot1d() {
+        let points = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
+        let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
+        let t_start = knots[0];
+        let t_end = knots[knots.len() - 1];
+        println!("Starting at {}, ending at {}", t_start, t_end);
+        let spline = BSpline::new(4, points, knots);
+        let t = 3.5;
         println!("spline({}) = {}", t, spline.point(t));
     }
 }
