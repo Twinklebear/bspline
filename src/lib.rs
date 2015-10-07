@@ -1,8 +1,18 @@
 use std::ops::{Mul, Add};
 
+pub trait Interpolate {
+    fn interpolate(&self, other: &Self, t: f32) -> Self;
+}
+
+impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
+    fn interpolate(&self, other: &Self, t: f32) -> Self {
+        *self * (1.0 - t) + *other * t
+    }
+}
+
 /// Structure for computing the B-spline with the given control points
 /// and knots.
-pub struct BSpline<T: Mul<f32, Output = T> + Add<Output = T> + Copy> {
+pub struct BSpline<T: Interpolate + Copy> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
     /// Control points for the curve
@@ -11,7 +21,7 @@ pub struct BSpline<T: Mul<f32, Output = T> + Add<Output = T> + Copy> {
     knots: Vec<f32>,
 }
 
-impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> BSpline<T> {
+impl<T: Interpolate + Copy> BSpline<T> {
     /// Create a new B-spline curve of the desired degree that will blend between
     /// the passed control points using the knots. The knots should be sorted in ascending
     /// order, otherwise they will be sorted for you which may lead to undesired knots
@@ -62,7 +72,7 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> BSpline<T> {
             //         self.knots[i + self.degree - k], self.knots[i - 1]);
             // TODO: This is still broken
             let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
-            self.de_boors(t, k - 1, i - 1) * (1.0 - alpha) + self.de_boors(t, k - 1, i) * alpha
+            self.de_boors(t, k - 1, i - 1).interpolate(&self.de_boors(t, k - 1, i), alpha)
         }
     }
 }
@@ -146,7 +156,8 @@ mod test {
         }
     }
 
-    //#[test]
+    // TODO: Test on 1D functions?
+    #[test]
     fn linear_bspline() {
         let points = vec![Point::new(-1.0, 0.0), Point::new(0.0, 1.0),
                           Point::new(1.0, 1.0), Point::new(1.0, 2.0)];
@@ -155,59 +166,6 @@ mod test {
         let x = spline.point(1.5);
         println!("spline(1.5) = {:?}", x);
         assert!(x.x == 0.5 && x.y == 1.0);
-    }
-    //#[test]
-    fn quadratic_bspline() {
-        let points = vec![Point::new(-2.0, 0.0), Point::new(0.0, 2.0),
-                          Point::new(2.0, 0.0), Point::new(0.0, -2.0)];
-        let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0];
-        let spline = BSpline::new(3, points, knots);
-        let x = spline.point(1.5);
-        println!("spline(1.5) = {:?}", x);
-        assert!(x.x == 1.25 && x.y == -0.25);
-    }
-    #[test]
-    fn bspline_plot() {
-        let points = vec![Pointi::new(0, 5), Pointi::new(9, 20),
-                          Pointi::new(29, 20), Pointi::new(39, 5)];
-        let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 2.0, 2.0];
-
-        // TODO: This doesn't compute or plot the correct curve
-        let plot_w = 80;
-        let plot_h = 50;
-        let mut plot: Vec<_> = iter::repeat(' ').take(plot_w * plot_h).collect();
-
-        let t_start = knots[0];
-        let t_end = knots[knots.len() - 1];
-        println!("Starting at {}, ending at {}", t_start, t_end);
-        let spline = BSpline::new(2, points.clone(), knots);
-
-        let steps = 20;
-        let step_size = (t_end - t_start) / steps as f32;
-        for s in 0..steps {
-            let t = step_size * s as f32 + t_start;
-            println!("t = {}", t);
-            let x = spline.point(t);
-            println!("x = {:?}", x);
-            if x.x > -1 && x.x < plot_w as i32 && x.y > -1 && x.y < plot_h as i32 {
-                plot[(plot_h - 1 - x.y as usize) * plot_w + x.x as usize] = 'X';
-            }
-        }
-        for i in 0..points.len() {
-            let symbol = match i {
-                x if x == 0 => 'S',
-                x if x == points.len() - 1 => 'E',
-                _ => 'C',
-            };
-            plot[(plot_h - 1 - points[i].y as usize) * plot_w + points[i].x as usize] = symbol;
-        }
-
-        for y in 0..plot_h {
-            for x in 0..plot_w {
-                print!("{}", plot[y * plot_w + x]);
-            }
-            println!("");
-        }
     }
     //#[test]
     fn quadratic_bspline_plot1d() {
