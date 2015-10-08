@@ -191,17 +191,15 @@ fn main() {
                      20.0, 20.0, 21.0, 21.0, 21.0, 22.0, 22.0, 22.0, 23.0, 24.0, 24.0,
                      25.0, 25.0, 26.0, 27.0, 28.0, 28.0, 28.0, 28.0];
 
-    let colors = vec![Colorf::new(1.0, 0.0, 0.0), Colorf::new(1.0, 0.0, 0.0),
-                      Colorf::new(0.0, 0.0, 1.0), Colorf::new(0.0, 1.0, 0.0),
-                      Colorf::new(0.0, 1.0, 0.0)];
-    let color_knots = vec![0.0, 0.0, 0.0, 14.0, 28.0, 28.0, 28.0];
+    let colors = vec![Colorf::new(1.0, 0.0, 0.0), Colorf::new(0.0, 0.0, 1.0), Colorf::new(0.0, 1.0, 0.0)];
+    let color_knots = vec![0.0, 0.0, 0.0, 28.0, 28.0, 28.0];
 
-    let t_start = knots[0];
-    let t_end = knots[knots.len() - 1];
+    let t_start = knots[3];
+    let t_end = knots[knots.len() - 1 - 3];
 
     let plot_dim = (720, 540);
     let scale = (plot_dim.0 as f32 / 14.0, plot_dim.1 as f32 / 10.0);
-    let offset = (6.0, 5.0);
+    let offset = (6.0, 4.5);
 
     let mut plot: Vec<_> = iter::repeat(255u8).take(plot_dim.0 * plot_dim.1 * 3).collect();
 
