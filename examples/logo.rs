@@ -127,8 +127,8 @@ fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, 
         let color = colors.point(t).to_srgb();
         let ix = ((pt.x + offset.0) * scale.0) as isize;
         let iy = ((pt.y + offset.1) * scale.1) as isize;
-        for y in iy - 1..iy + 1 {
-            for x in ix - 1..ix + 1 {
+        for y in iy - 4..iy + 4 {
+            for x in ix - 4..ix + 4 {
                 if y >= 0 && y < plot_dim.1 as isize && x >= 0 && x < plot_dim.0 as isize {
                     let px = (plot_dim.1 - 1 - y as usize) * plot_dim.0 * 3 + x as usize * 3;
                     for i in 0..3 {
@@ -143,9 +143,9 @@ fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, 
         for pt in spline.control_points() {
             let ix = ((pt.x + offset.0) * scale.0) as isize;
             let iy = ((pt.y + offset.1) * scale.1) as isize;
-            // Plot a 4x4 red marker for each control point
-            for y in iy - 2..iy + 2 {
-                for x in ix - 2..ix + 2 {
+            // Plot a black marker for each control point
+            for y in iy - 3..iy + 3 {
+                for x in ix - 3..ix + 3 {
                     if y >= 0 && y < plot_dim.1 as isize && x >= 0 && x < plot_dim.0 as isize {
                         let px = (plot_dim.1 - 1 - y as usize) * plot_dim.0 * 3 + x as usize * 3;
                         plot[px] = 0;
