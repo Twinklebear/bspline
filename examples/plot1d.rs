@@ -5,8 +5,9 @@ use std::iter;
 
 /// Evaluate the B-spline and plot it to the image buffer passed
 fn plot_1d(spline: &bspline::BSpline<f32>, plot: &mut [u8], plot_dim: (usize, usize), scale: (f32, f32),
-           offset: (f32, f32), t_range: (f32, f32)) {
+           offset: (f32, f32)) {
     let step_size = 0.001;
+    let t_range = spline.knot_domain();
     let steps = ((t_range.1 - t_range.0) / step_size) as usize;
     for s in 0..steps {
         let t = step_size * s as f32 + t_range.0;
@@ -30,8 +31,7 @@ fn plot_1d(spline: &bspline::BSpline<f32>, plot: &mut [u8], plot_dim: (usize, us
 fn plot_quadratic() {
     let points = vec![0.0, 0.0, 1.0, 0.0, 0.0];
     let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
-    let t_start = knots[0];
-    let t_end = knots[knots.len() - 1];
+    let degree = 2;
 
     let plot_w = 720;
     let plot_h = 540;
@@ -43,10 +43,12 @@ fn plot_quadratic() {
 
     println!("Plotting Quadratic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
-    println!("\tStarting at {}, ending at {}", t_start, t_end);
-    let spline = bspline::BSpline::new(2, points, knots);
 
-    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (0.0, y_offset), (t_start, t_end));
+    let spline = bspline::BSpline::new(degree, points, knots);
+
+    println!("\tt range = {:?}", spline.knot_domain());
+
+    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (0.0, y_offset));
     match image::save_buffer("quadratic_1d.png", &plot[..], plot_w as u32, plot_h as u32, image::RGB(8)) {
         Ok(_) => println!("1D Quadratic B-spline saved to quadratic_1d.png"),
         Err(e) => println!("Error saving quadratic_1d.png,  {}", e),
@@ -56,8 +58,7 @@ fn plot_quadratic() {
 fn plot_cubic() {
     let points = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0];
     let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
-    let t_start = knots[0];
-    let t_end = knots[knots.len() - 1];
+    let degree = 3;
 
     let plot_w = 720;
     let plot_h = 540;
@@ -70,10 +71,12 @@ fn plot_cubic() {
 
     println!("Plotting Cubic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
-    println!("\tStarting at {}, ending at {}", t_start, t_end);
-    let spline = bspline::BSpline::new(3, points, knots);
 
-    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (x_offset, y_offset), (t_start, t_end));
+    let spline = bspline::BSpline::new(degree, points, knots);
+
+    println!("\tt range = {:?}", spline.knot_domain());
+
+    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (x_offset, y_offset));
     match image::save_buffer("cubic_1d.png", &plot[..], plot_w as u32, plot_h as u32, image::RGB(8)) {
         Ok(_) => println!("1D Cubic B-spline saved to cubic_1d.png"),
         Err(e) => println!("Error saving cubic_1d.png,  {}", e),
@@ -81,10 +84,9 @@ fn plot_cubic() {
 }
 /// Plot a simple 1D quartic B-spline
 fn plot_quartic() {
-        let points = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
-        let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
-    let t_start = knots[0];
-    let t_end = knots[knots.len() - 1];
+    let points = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
+    let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
+    let degree = 4;
 
     let plot_w = 720;
     let plot_h = 540;
@@ -96,10 +98,12 @@ fn plot_quartic() {
 
     println!("Plotting Quartic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
-    println!("\tStarting at {}, ending at {}", t_start, t_end);
-    let spline = bspline::BSpline::new(4, points, knots);
 
-    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (0.0, y_offset), (t_start, t_end));
+    let spline = bspline::BSpline::new(degree, points, knots);
+
+    println!("\tt range = {:?}", spline.knot_domain());
+
+    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (0.0, y_offset));
     match image::save_buffer("quartic_1d.png", &plot[..], plot_w as u32, plot_h as u32, image::RGB(8)) {
         Ok(_) => println!("1D Quartic B-spline saved to quartic_1d.png"),
         Err(e) => println!("Error saving quartic_1d.png,  {}", e),

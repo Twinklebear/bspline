@@ -117,9 +117,9 @@ impl IndexMut<usize> for Colorf {
 /// Evaluate the B-spline and plot it to the image buffer passed. The colors and points splines
 /// should have the same t range.
 fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, plot: &mut [u8],
-           plot_dim: (usize, usize), scale: (f32, f32), offset: (f32, f32), t_range: (f32, f32),
-           show_control_pts: bool) {
+           plot_dim: (usize, usize), scale: (f32, f32), offset: (f32, f32), show_control_pts: bool) {
     let step_size = 0.001;
+    let t_range = spline.knot_domain();
     let steps = ((t_range.1 - t_range.0) / step_size) as usize;
     for s in 0..steps {
         let t = step_size * s as f32 + t_range.0;
@@ -194,9 +194,6 @@ fn main() {
     let colors = vec![Colorf::new(1.0, 0.0, 0.0), Colorf::new(0.0, 0.0, 1.0), Colorf::new(0.0, 1.0, 0.0)];
     let color_knots = vec![0.0, 0.0, 0.0, 28.0, 28.0, 28.0];
 
-    let t_start = knots[3];
-    let t_end = knots[knots.len() - 1 - 3];
-
     let plot_dim = (720, 540);
     let scale = (plot_dim.0 as f32 / 14.0, plot_dim.1 as f32 / 10.0);
     let offset = (6.0, 4.5);
@@ -206,7 +203,7 @@ fn main() {
     let spline = bspline::BSpline::new(3, points, knots);
     let color_spline = bspline::BSpline::new(2, colors, color_knots);
 
-    plot_2d(&spline, &color_spline, &mut plot[..], plot_dim, scale, offset, (t_start, t_end), false);
+    plot_2d(&spline, &color_spline, &mut plot[..], plot_dim, scale, offset, false);
     match image::save_buffer("logo.png", &plot[..], plot_dim.0 as u32, plot_dim.1 as u32, image::RGB(8)) {
         Ok(_) => println!("B-spline logo saved to logo.png"),
         Err(e) => println!("Error saving logo.png,  {}", e),
