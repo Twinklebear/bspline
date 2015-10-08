@@ -1,4 +1,5 @@
 use std::ops::{Mul, Add};
+use std::slice::Iter;
 
 pub trait Interpolate {
     fn interpolate(&self, other: &Self, t: f32) -> Self;
@@ -58,6 +59,14 @@ impl<T: Interpolate + Copy> BSpline<T> {
         //println!("Found i = {} for t = {}\n\tknots = {:?}", i, t, self.knots);
         //println!("degree = {}", self.degree);
         self.de_boors(t, self.degree, i)
+    }
+    /// Get an iterator over the control points
+    pub fn control_points(&self) -> Iter<T> {
+        self.control_points.iter()
+    }
+    /// Get an iterator over the knots
+    pub fn knots(&self) -> Iter<f32> {
+        self.knots.iter()
     }
     /// Recursively compute de Boor's B-spline algorithm. TODO: This is terrible,
     /// compute it iteratively! Recursive version is just for a simple formualation
