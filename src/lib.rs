@@ -62,7 +62,12 @@ impl<T: Interpolate + Copy> BSpline<T> {
     pub fn knots(&self) -> Iter<f32> {
         self.knots.iter()
     }
-    /// Recursively compute de Boor's B-spline algorithm. TODO: This is terrible,
+    /// Get the min and max knot domain values for finding the t range to compute
+    /// the curve over
+    pub fn knot_domain(&self) -> (f32, f32) {
+        (self.knots[self.degree], self.knots[self.knots.len() - 1 - self.degree])
+    }
+    /// Recursively compute de Boor's B-spline algorithm. TODO: This is not so good,
     /// compute it iteratively! Recursive version is just for a simple formualation
     /// of the initial implementation. Could we do memo-ization? If we switch to an
     /// iterative one and recursively compute the weights our interpolation at
