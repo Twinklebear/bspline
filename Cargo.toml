@@ -2,3 +2,7 @@
 name = "bspline"
 version = "0.1.0"
 authors = ["Will Usher <willusher.life@gmail.com>"]
+
+[dev-dependencies]
+image ="0.3.14"
+

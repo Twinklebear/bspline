@@ -1,6 +1,26 @@
+extern crate image;
 extern crate bspline;
 
 use std::iter;
+
+/// Evaluate the B-spline and plot it to the image buffer passed
+fn plot_1d(spline: &bspline::BSpline<f32>, plot: &mut [u8], plot_dim: (usize, usize), scale: (f32, f32),
+           offset: (f32, f32), t_range: (f32, f32)) {
+    let step_size = 0.001;
+    let steps = ((t_range.1 - t_range.0) / step_size) as usize;
+    for s in 0..steps {
+        let t = step_size * s as f32 + t_range.0;
+        let y = spline.point(t);
+        let ix = ((t + offset.0) * scale.0) as isize;
+        let iy = ((y + offset.1) * scale.1) as isize;
+        if iy >= 0 && iy < plot_dim.1 as isize {
+            let px = (plot_dim.1 - 1 - iy as usize) * plot_dim.0 * 3 + ix as usize * 3;
+            for i in 0..3 {
+                plot[px + i] = 0;
+            }
+        }
+    }
+}
 
 /// Plot a simple 1D quadratic B-spline
 fn plot_quadratic() {
@@ -9,34 +29,23 @@ fn plot_quadratic() {
     let t_start = knots[0];
     let t_end = knots[knots.len() - 1];
 
-    let plot_w = 80;
-    let plot_h = 30;
+    let plot_w = 720;
+    let plot_h = 540;
     let x_scale = plot_w as f32 / knots[knots.len() - 1];
-    let y_scale = plot_h as f32 / 1.0;
+    let y_scale = plot_h as f32 / 2.0;
+    let y_offset = 1.0;
 
-    let mut plot: Vec<_> = iter::repeat(' ').take(plot_w * plot_h).collect();
+    let mut plot: Vec<_> = iter::repeat(255u8).take(plot_w * plot_h * 3).collect();
 
     println!("Plotting Quadratic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
     println!("\tStarting at {}, ending at {}", t_start, t_end);
     let spline = bspline::BSpline::new(2, points, knots);
 
-    let step_size = 0.001;
-    let steps = ((t_end - t_start) / step_size) as usize;
-    for s in 0..steps {
-        let t = step_size * s as f32 + t_start;
-        let y = spline.point(t);
-        let iy = (y * y_scale) as isize;
-        let ix = (t * x_scale) as isize;
-        if iy >= 0 && iy < plot_h as isize {
-            plot[(plot_h - 1 - iy as usize) * plot_w + ix as usize] = 'O';
-        }
-    }
-    for y in 0..plot_h {
-        for x in 0..plot_w {
-            print!("{}", plot[y * plot_w + x]);
-        }
-        println!("");
+    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (0.0, y_offset), (t_start, t_end));
+    match image::save_buffer("quadratic_1d.png", &plot[..], plot_w as u32, plot_h as u32, image::RGB(8)) {
+        Ok(_) => println!("1D Quadratic B-spline saved to quadratic_1d.png"),
+        Err(e) => println!("Error saving quadratic_1d.png,  {}", e),
     }
 }
 /// Plot a simple 1D cubic B-spline
@@ -46,35 +55,24 @@ fn plot_cubic() {
     let t_start = knots[0];
     let t_end = knots[knots.len() - 1];
 
-    let plot_w = 80;
-    let plot_h = 30;
+    let plot_w = 720;
+    let plot_h = 540;
     let x_scale = plot_w as f32 / 4.0;
     let x_offset = 2.0;
-    let y_scale = plot_h as f32 / 6.0;
+    let y_scale = plot_h as f32 / 10.0;
+    let y_offset = 5.0;
 
-    let mut plot: Vec<_> = iter::repeat(' ').take(plot_w * plot_h).collect();
+    let mut plot: Vec<_> = iter::repeat(255u8).take(plot_w * plot_h * 3).collect();
 
     println!("Plotting Cubic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
     println!("\tStarting at {}, ending at {}", t_start, t_end);
     let spline = bspline::BSpline::new(3, points, knots);
 
-    let step_size = 0.001;
-    let steps = ((t_end - t_start) / step_size) as usize;
-    for s in 0..steps {
-        let t = step_size * s as f32 + t_start;
-        let y = spline.point(t);
-        let iy = (y * y_scale) as isize;
-        let ix = ((t + x_offset) * x_scale) as isize;
-        if iy >= 0 && iy < plot_h as isize {
-            plot[(plot_h - 1 - iy as usize) * plot_w + ix as usize] = 'O';
-        }
-    }
-    for y in 0..plot_h {
-        for x in 0..plot_w {
-            print!("{}", plot[y * plot_w + x]);
-        }
-        println!("");
+    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (x_offset, y_offset), (t_start, t_end));
+    match image::save_buffer("cubic_1d.png", &plot[..], plot_w as u32, plot_h as u32, image::RGB(8)) {
+        Ok(_) => println!("1D Cubic B-spline saved to cubic_1d.png"),
+        Err(e) => println!("Error saving cubic_1d.png,  {}", e),
     }
 }
 /// Plot a simple 1D quartic B-spline
@@ -84,34 +82,23 @@ fn plot_quartic() {
     let t_start = knots[0];
     let t_end = knots[knots.len() - 1];
 
-    let plot_w = 80;
-    let plot_h = 30;
+    let plot_w = 720;
+    let plot_h = 540;
     let x_scale = plot_w as f32 / 5.0;
-    let y_scale = plot_h as f32 / 1.0;
+    let y_scale = plot_h as f32 / 3.0;
+    let y_offset = 1.5;
 
-    let mut plot: Vec<_> = iter::repeat(' ').take(plot_w * plot_h).collect();
+    let mut plot: Vec<_> = iter::repeat(255u8).take(plot_w * plot_h * 3).collect();
 
     println!("Plotting Quartic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
     println!("\tStarting at {}, ending at {}", t_start, t_end);
     let spline = bspline::BSpline::new(4, points, knots);
 
-    let step_size = 0.001;
-    let steps = ((t_end - t_start) / step_size) as usize;
-    for s in 0..steps {
-        let t = step_size * s as f32 + t_start;
-        let y = spline.point(t);
-        let iy = (y * y_scale) as isize;
-        let ix = (t * x_scale) as isize;
-        if iy >= 0 && iy < plot_h as isize {
-            plot[(plot_h - 1 - iy as usize) * plot_w + ix as usize] = 'O';
-        }
-    }
-    for y in 0..plot_h {
-        for x in 0..plot_w {
-            print!("{}", plot[y * plot_w + x]);
-        }
-        println!("");
+    plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (0.0, y_offset), (t_start, t_end));
+    match image::save_buffer("quartic_1d.png", &plot[..], plot_w as u32, plot_h as u32, image::RGB(8)) {
+        Ok(_) => println!("1D Quartic B-spline saved to quartic_1d.png"),
+        Err(e) => println!("Error saving quartic_1d.png,  {}", e),
     }
 }
 
