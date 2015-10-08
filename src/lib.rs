@@ -132,30 +132,6 @@ mod test {
         }
     }
 
-    #[derive(Copy, Clone, Debug)]
-    struct Pointi {
-        x: i32,
-        y: i32,
-    }
-    impl Pointi {
-        fn new(x: i32, y: i32) -> Pointi {
-            Pointi { x: x, y: y }
-        }
-    }
-    impl Mul<f32> for Pointi {
-        type Output = Pointi;
-        fn mul(self, rhs: f32) -> Pointi {
-            Pointi { x: (self.x as f32 * rhs) as i32,
-                    y: (self.y as f32 * rhs) as i32 }
-        }
-    }
-    impl Add for Pointi {
-        type Output = Pointi;
-        fn add(self, rhs: Pointi) -> Pointi {
-            Pointi { x: self.x + rhs.x, y: self.y + rhs.y }
-        }
-    }
-
     // TODO: Test on 1D functions?
     #[test]
     fn linear_bspline() {
