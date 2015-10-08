@@ -106,7 +106,6 @@ fn upper_bounds(data: &[f32], value: f32) -> Option<usize> {
 #[cfg(test)]
 mod test {
     use std::ops::{Mul, Add};
-    use std::iter;
 
     use super::BSpline;
 
