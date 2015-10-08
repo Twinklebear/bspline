@@ -66,13 +66,44 @@ fn plot_2d(spline: &bspline::BSpline<Point>, plot: &mut [u8], plot_dim: (usize, 
     }
 }
 
+fn plot_test() {
+    let points = vec![Point::new(-2.5, 1.5), Point::new(-2.0, -1.5),
+                      Point::new(-1.5, 1.5), Point::new(-1.0, -1.5),
+                      Point::new(-0.5, 1.5), Point::new(0.0, -1.5),
+                      Point::new(0.5, 1.5), Point::new(1.0, -1.5),
+                      Point::new(1.5, 1.5), Point::new(2.0, -1.5),
+                      Point::new(2.5, 1.5)];
+    let knots = vec![0.0, 0.0, 0.0, 0.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+                     10.0, 11.0, 12.0, 13.0, 14.0];
+    let degree = 3;
+    let t_start = knots[degree];
+    let t_end = knots[knots.len() - 1 - degree];
+
+    let plot_dim = (720, 540);
+    let scale = (plot_dim.0 as f32 / 6.0, plot_dim.1 as f32 / 4.0);
+    let offset = (3.0, 2.0);
+
+    let mut plot: Vec<_> = iter::repeat(255u8).take(plot_dim.0 * plot_dim.1 * 3).collect();
+
+    println!("Plotting B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
+             points, knots);
+    println!("\tStarting at {}, ending at {}", t_start, t_end);
+    let spline = bspline::BSpline::new(degree, points, knots);
+
+    plot_2d(&spline, &mut plot[..], plot_dim, scale, offset, (t_start, t_end));
+    match image::save_buffer("test.png", &plot[..], plot_dim.0 as u32, plot_dim.1 as u32, image::RGB(8)) {
+        Ok(_) => println!("Test B-spline saved to test.png"),
+        Err(e) => println!("Error saving test.png,  {}", e),
+    }
+}
+
 /// Plot a simple 2D quadratic B-spline
 fn plot_quadratic() {
-    let points = vec![Point::new(-1.5, 0.0), Point::new(-1.0, 1.5), Point::new(0.0, -1.0),
-                      Point::new(1.0, 0.0), Point::new(0.75, -1.6)];
-    let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
-    let t_start = knots[0];
-    let t_end = knots[knots.len() - 1];
+    let points = vec![Point::new(-1.5, 0.0), Point::new(0.0, 1.5), Point::new(1.5, 0.0)];
+    let knots = vec![0.0, 0.0, 0.0, 3.0, 3.0, 3.0];
+    let degree = 2;
+    let t_start = knots[degree];
+    let t_end = knots[knots.len() - 1 - degree];
 
     let plot_dim = (720, 540);
     let scale = (plot_dim.0 as f32 / 4.0, plot_dim.1 as f32 / 4.0);
@@ -83,7 +114,7 @@ fn plot_quadratic() {
     println!("Plotting Quadratic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
     println!("\tStarting at {}, ending at {}", t_start, t_end);
-    let spline = bspline::BSpline::new(2, points, knots);
+    let spline = bspline::BSpline::new(degree, points, knots);
 
     plot_2d(&spline, &mut plot[..], plot_dim, scale, offset, (t_start, t_end));
     match image::save_buffer("quadratic_2d.png", &plot[..], plot_dim.0 as u32, plot_dim.1 as u32, image::RGB(8)) {
@@ -93,12 +124,12 @@ fn plot_quadratic() {
 }
 /// Plot a simple 2D cubic B-spline
 fn plot_cubic() {
-    let points = vec![Point::new(-1.5, 1.2), Point::new(-1.8, 0.5), Point::new(-0.7, -0.25),
-                      Point::new(0.0, 1.8), Point::new(0.9, 0.2), Point::new(0.3, -0.6),
-                      Point::new(1.5, -0.5)];
-    let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
-    let t_start = knots[0];
-    let t_end = knots[knots.len() - 1];
+    let points = vec![Point::new(-1.5, -1.5), Point::new(-0.5, 1.5),
+                      Point::new(0.5, -1.5), Point::new(1.5, 1.5)];
+    let knots = vec![0.0, 1.0, 2.0, 2.0, 5.0, 5.0, 6.0, 7.0];
+    let degree = 3;
+    let t_start = knots[degree];
+    let t_end = knots[knots.len() - 1 - degree];
 
     let plot_dim = (720, 540);
     let scale = (plot_dim.0 as f32 / 4.0, plot_dim.1 as f32 / 4.0);
@@ -109,7 +140,7 @@ fn plot_cubic() {
     println!("Plotting Cubic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
     println!("\tStarting at {}, ending at {}", t_start, t_end);
-    let spline = bspline::BSpline::new(3, points, knots);
+    let spline = bspline::BSpline::new(degree, points, knots);
 
     plot_2d(&spline, &mut plot[..], plot_dim, scale, offset, (t_start, t_end));
     match image::save_buffer("cubic_2d.png", &plot[..], plot_dim.0 as u32, plot_dim.1 as u32, image::RGB(8)) {
@@ -119,12 +150,13 @@ fn plot_cubic() {
 }
 /// Plot a simple 2D quartic B-spline
 fn plot_quartic() {
-        let points = vec![Point::new(-1.8, -1.4), Point::new(-1.2, 0.5), Point::new(-0.2, -0.8),
-                          Point::new(-0.6, 0.7), Point::new(0.0, 1.6), Point::new(1.0, 0.0),
-                          Point::new(0.6, -0.3), Point::new(0.6, -0.3), Point::new(0.0, -1.0)];
-        let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
-    let t_start = knots[0];
-    let t_end = knots[knots.len() - 1];
+    let points = vec![Point::new(-1.8, -1.4), Point::new(-1.2, 0.5), Point::new(-0.2, -0.8),
+                      Point::new(-0.6, 0.7), Point::new(0.0, 1.6), Point::new(1.0, 0.0),
+                      Point::new(0.6, -0.3), Point::new(0.0, -1.0)];
+    let knots = vec![0.0, 0.0, 0.0, 0.0, 0.2, 1.0, 2.0, 3.0, 5.0, 5.0, 5.0, 5.0, 5.0];
+    let degree = 4;
+    let t_start = knots[degree];
+    let t_end = knots[knots.len() - 1 - degree];
 
     let plot_dim = (720, 540);
     let scale = (plot_dim.0 as f32 / 4.0, plot_dim.1 as f32 / 4.0);
@@ -135,7 +167,7 @@ fn plot_quartic() {
     println!("Plotting Quartic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
              points, knots);
     println!("\tStarting at {}, ending at {}", t_start, t_end);
-    let spline = bspline::BSpline::new(4, points, knots);
+    let spline = bspline::BSpline::new(degree, points, knots);
 
     plot_2d(&spline, &mut plot[..], plot_dim, scale, offset, (t_start, t_end));
     match image::save_buffer("quartic_2d.png", &plot[..], plot_dim.0 as u32, plot_dim.1 as u32, image::RGB(8)) {
@@ -145,6 +177,7 @@ fn plot_quartic() {
 }
 
 fn main() {
+    plot_test();
     let divider: String = iter::repeat('-').take(80).collect();
     plot_quadratic();
     println!("{}\n\n{}", divider, divider);
