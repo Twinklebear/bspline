@@ -33,6 +33,10 @@ impl<T: Interpolate + Copy> BSpline<T> {
         if control_points.len() < degree {
             panic!("Too few control points for curve");
         }
+        if knots.len() != control_points.len() + degree + 1 {
+            panic!(format!("Invalid number of knots, got {}, expected {}", knots.len(),
+                control_points.len() + degree + 1));
+        }
         knots.sort_by(|a, b| a.partial_cmp(b).unwrap());
         BSpline { degree: degree, control_points: control_points, knots: knots }
     }
@@ -48,8 +52,6 @@ impl<T: Interpolate + Copy> BSpline<T> {
             Some(x) => x,
             None => self.knots.len() - self.degree - 1,
         };
-        //println!("Found i = {} for t = {}\n\tknots = {:?}", i, t, self.knots);
-        //println!("degree = {}", self.degree);
         self.de_boors(t, self.degree, i)
     }
     /// Get an iterator over the control points
@@ -62,16 +64,14 @@ impl<T: Interpolate + Copy> BSpline<T> {
     }
     /// Recursively compute de Boor's B-spline algorithm. TODO: This is terrible,
     /// compute it iteratively! Recursive version is just for a simple formualation
-    /// of the initial implementation.
+    /// of the initial implementation. Could we do memo-ization? If we switch to an
+    /// iterative one and recursively compute the weights our interpolation at
+    /// each level is no longer linear, which makes it harder to support things like
+    /// Quaternions.
     fn de_boors(&self, t: f32, k: usize, i: usize) -> T {
         if k == 0 {
-            //println!("Returning control point {}", i);
             self.control_points[i - 1]
         } else {
-            //println!("Looking at k = {}, i = {}, t = {}", k, i, t);
-            //println!("\tknots[i + self.degree - k] = {}, self.knots[i - 1] = {}",
-            //         self.knots[i + self.degree - k], self.knots[i - 1]);
-            // TODO: This is still broken
             let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
             self.de_boors(t, k - 1, i - 1).interpolate(&self.de_boors(t, k - 1, i), alpha)
         }
@@ -132,7 +132,7 @@ mod test {
         }
     }
 
-    // TODO: Test on 1D functions?
+    // TODO: Test on 1D functions? Re-write tests
     #[test]
     fn linear_bspline() {
         let points = vec![Point::new(-1.0, 0.0), Point::new(0.0, 1.0),
@@ -142,39 +142,6 @@ mod test {
         let x = spline.point(1.5);
         println!("spline(1.5) = {:?}", x);
         assert!(x.x == 0.5 && x.y == 1.0);
-    }
-    //#[test]
-    fn quadratic_bspline_plot1d() {
-        let points = vec![0.0, 0.0, 1.0, 0.0, 0.0];
-        let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
-        let t_start = knots[0];
-        let t_end = knots[knots.len() - 1];
-        println!("Starting at {}, ending at {}", t_start, t_end);
-        let spline = BSpline::new(2, points, knots);
-        let t = 0.5;
-        println!("spline({}) = {}", t, spline.point(t));
-    }
-    //#[test]
-    fn cubic_bspline_plot1d() {
-        let points = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0];
-        let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
-        let t_start = knots[0];
-        let t_end = knots[knots.len() - 1];
-        println!("Starting at {}, ending at {}", t_start, t_end);
-        let spline = BSpline::new(3, points, knots);
-        let t = 0.5;
-        println!("spline({}) = {}", t, spline.point(t));
-    }
-    //#[test]
-    fn quartic_bspline_plot1d() {
-        let points = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
-        let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
-        let t_start = knots[0];
-        let t_end = knots[knots.len() - 1];
-        println!("Starting at {}, ending at {}", t_start, t_end);
-        let spline = BSpline::new(4, points, knots);
-        let t = 3.5;
-        println!("spline({}) = {}", t, spline.point(t));
     }
 }
 
