@@ -43,19 +43,11 @@ impl<T: Interpolate + Copy> BSpline<T> {
     pub fn point(&self, t: f32) -> T {
         // Find the first index with a knot value greater than the t we're searching for. We want
         // to find i such that: knot[i] <= t < knot[i + 1]
-        let (mut i, _) = self.knots.iter().take_while(|&x| !(*x > t)).enumerate().last().unwrap();
-        i = i + 1;
-        if i == self.knots.len() {
-            i = self.knots.len() - self.degree - 1;
-        } else if i == 0 {
-            i = self.degree;
-        }
-        /*
-        let i = match upper_bounds(&self.knots[self.degree - 1..self.knots.len() - self.degree], t) {
+        let i = match upper_bounds(&self.knots[..], t) {
+            Some(x) if x == 0 => self.degree,
             Some(x) => x,
             None => self.knots.len() - self.degree - 1,
         };
-        */
         //println!("Found i = {} for t = {}\n\tknots = {:?}", i, t, self.knots);
         //println!("degree = {}", self.degree);
         self.de_boors(t, self.degree, i)
