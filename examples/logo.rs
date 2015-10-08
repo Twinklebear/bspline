@@ -117,7 +117,8 @@ impl IndexMut<usize> for Colorf {
 /// Evaluate the B-spline and plot it to the image buffer passed. The colors and points splines
 /// should have the same t range.
 fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, plot: &mut [u8],
-           plot_dim: (usize, usize), scale: (f32, f32), offset: (f32, f32), t_range: (f32, f32)) {
+           plot_dim: (usize, usize), scale: (f32, f32), offset: (f32, f32), t_range: (f32, f32),
+           show_control_pts: bool) {
     let step_size = 0.001;
     let steps = ((t_range.1 - t_range.0) / step_size) as usize;
     for s in 0..steps {
@@ -138,17 +139,19 @@ fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, 
         }
     }
     // Draw the control points
-    for pt in spline.control_points() {
-        let ix = ((pt.x + offset.0) * scale.0) as isize;
-        let iy = ((pt.y + offset.1) * scale.1) as isize;
-        // Plot a 4x4 red marker for each control point
-        for y in iy - 2..iy + 2 {
-            for x in ix - 2..ix + 2 {
-                if y >= 0 && y < plot_dim.1 as isize && x >= 0 && x < plot_dim.0 as isize {
-                    let px = (plot_dim.1 - 1 - y as usize) * plot_dim.0 * 3 + x as usize * 3;
-                    plot[px] = 0;
-                    plot[px + 1] = 0;
-                    plot[px + 2] = 0;
+    if show_control_pts {
+        for pt in spline.control_points() {
+            let ix = ((pt.x + offset.0) * scale.0) as isize;
+            let iy = ((pt.y + offset.1) * scale.1) as isize;
+            // Plot a 4x4 red marker for each control point
+            for y in iy - 2..iy + 2 {
+                for x in ix - 2..ix + 2 {
+                    if y >= 0 && y < plot_dim.1 as isize && x >= 0 && x < plot_dim.0 as isize {
+                        let px = (plot_dim.1 - 1 - y as usize) * plot_dim.0 * 3 + x as usize * 3;
+                        plot[px] = 0;
+                        plot[px + 1] = 0;
+                        plot[px + 2] = 0;
+                    }
                 }
             }
         }
@@ -202,13 +205,10 @@ fn main() {
 
     let mut plot: Vec<_> = iter::repeat(255u8).take(plot_dim.0 * plot_dim.1 * 3).collect();
 
-    println!("Plotting Cubic B-spline with:\n\tpoints = {:?}\n\tknots = {:?}",
-             points, knots);
-    println!("\tStarting at {}, ending at {}", t_start, t_end);
     let spline = bspline::BSpline::new(3, points, knots);
     let color_spline = bspline::BSpline::new(2, colors, color_knots);
 
-    plot_2d(&spline, &color_spline, &mut plot[..], plot_dim, scale, offset, (t_start, t_end));
+    plot_2d(&spline, &color_spline, &mut plot[..], plot_dim, scale, offset, (t_start, t_end), false);
     match image::save_buffer("logo.png", &plot[..], plot_dim.0 as u32, plot_dim.1 as u32, image::RGB(8)) {
         Ok(_) => println!("B-spline logo saved to logo.png"),
         Err(e) => println!("Error saving logo.png,  {}", e),
