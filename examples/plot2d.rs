@@ -93,9 +93,9 @@ fn plot_quadratic() {
 }
 /// Plot a simple 2D cubic B-spline
 fn plot_cubic() {
-    let points = vec![Point::new(-1.0, 0.0), Point::new(-1.0, 0.0), Point::new(-1.0, 0.0),
-                      Point::new(0.0, 2.0), Point::new(1.0, 0.0), Point::new(1.0, 0.0),
-                      Point::new(1.0, 0.0)];
+    let points = vec![Point::new(-1.5, 1.2), Point::new(-1.8, 0.5), Point::new(-0.7, -0.25),
+                      Point::new(0.0, 1.8), Point::new(0.9, 0.2), Point::new(0.3, -0.6),
+                      Point::new(1.5, -0.5)];
     let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
     let t_start = knots[0];
     let t_end = knots[knots.len() - 1];
@@ -119,9 +119,9 @@ fn plot_cubic() {
 }
 /// Plot a simple 2D quartic B-spline
 fn plot_quartic() {
-        let points = vec![Point::new(-1.0, 0.0), Point::new(-1.0, 0.0), Point::new(-1.0, 0.0),
-                          Point::new(-1.0, 0.0), Point::new(0.0, 1.0), Point::new(1.0, 0.0),
-                          Point::new(1.0, 0.0), Point::new(1.0, 0.0), Point::new(1.0, 0.0)];
+        let points = vec![Point::new(-1.8, -1.4), Point::new(-1.2, 0.5), Point::new(-0.2, -0.8),
+                          Point::new(-0.6, 0.7), Point::new(0.0, 1.6), Point::new(1.0, 0.0),
+                          Point::new(0.6, -0.3), Point::new(0.6, -0.3), Point::new(0.0, -1.0)];
         let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
     let t_start = knots[0];
     let t_end = knots[knots.len() - 1];
