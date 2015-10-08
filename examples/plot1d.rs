@@ -13,10 +13,14 @@ fn plot_1d(spline: &bspline::BSpline<f32>, plot: &mut [u8], plot_dim: (usize, us
         let y = spline.point(t);
         let ix = ((t + offset.0) * scale.0) as isize;
         let iy = ((y + offset.1) * scale.1) as isize;
-        if iy >= 0 && iy < plot_dim.1 as isize {
-            let px = (plot_dim.1 - 1 - iy as usize) * plot_dim.0 * 3 + ix as usize * 3;
-            for i in 0..3 {
-                plot[px + i] = 0;
+        for y in iy - 1..iy + 1 {
+            for x in ix - 1..ix + 1 {
+                if y >= 0 && y < plot_dim.1 as isize && x >= 0 && x < plot_dim.0 as isize {
+                    let px = (plot_dim.1 - 1 - y as usize) * plot_dim.0 * 3 + x as usize * 3;
+                    for i in 0..3 {
+                        plot[px + i] = 0;
+                    }
+                }
             }
         }
     }
