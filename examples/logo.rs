@@ -85,7 +85,6 @@ impl Mul<f32> for Colorf {
 impl Index<usize> for Colorf {
     type Output = f32;
     /// Access the channels by index
-    /// 
     /// - 0 = r
     /// - 1 = g
     /// - 2 = b
@@ -100,7 +99,6 @@ impl Index<usize> for Colorf {
 }
 impl IndexMut<usize> for Colorf {
     /// Access the channels by index
-    /// 
     /// - 0 = r
     /// - 1 = g
     /// - 2 = b
