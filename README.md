@@ -10,7 +10,11 @@ of the curve and a quadratic B-spline in RGB space to color it (check out the
 much simpler examples of 1D and 2D quadratic, cubic and quartic B-splines can also be found in
 the [examples](https://github.com/Twinklebear/bspline/tree/master/examples).
 
-# Crate
+# Installation
+
+Just grab the crate on [crates.io](https://crates.io/crates/bspline) and you're set!
+
+[![Build Status](https://travis-ci.org/Twinklebear/bspline.svg?branch=master)](https://travis-ci.org/Twinklebear/bspline)
 
 # Documentation
 
