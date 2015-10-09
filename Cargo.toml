@@ -13,6 +13,8 @@ license = "MIT"
 
 exclude = [
 	".travis.yml",
+	"*.png",
+	".gitignore",
 ]
 
 [dev-dependencies]

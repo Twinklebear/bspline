@@ -14,7 +14,7 @@ the [examples](https://github.com/Twinklebear/bspline/tree/master/examples).
 
 # Documentation
 
-Rust doc can be found [here]()
+Rust doc can be found [here](http://www.willusher.io/bspline/bspline/).
 
 ## Readings on B-splines
 The library assumes you are familiar at some level with how B-splines work, e.g. how
@@ -26,6 +26,6 @@ effectively use this library can be found below.
 - [Fundamentals of Computer Graphics](http://www.amazon.com/Fundamentals-Computer-Graphics-Peter-Shirley/dp/1568814690)
 (has a good chapter on curves)
 - [Splines and B-splines: An Introduction](http://www.uio.no/studier/emner/matnat/ifi/INF-MAT5340/v07/undervisningsmateriale/kap1.pdf)
-- [Geometric Modelling](http://atrey.karlin.mff.cuni.cz/projekty/vrr/doc/grafika/geometric%20modelling.pdf)
+- [Geometric Modeling](http://atrey.karlin.mff.cuni.cz/projekty/vrr/doc/grafika/geometric%20modelling.pdf)
 - [A nice set of interactive examples](https://www.ibiblio.org/e-notes/Splines/Intro.htm)
 
