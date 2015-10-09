@@ -1,19 +1,18 @@
 language: rust
 rust:
-    - stable
-    - beta
-    - nightly
+- stable
+- beta
 sudo: false
 before_script:
-    - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+- pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
 script:
-    - travis-cargo build
-    - travis-cargo test
-    - travis-cargo doc
+- travis-cargo build
+- travis-cargo test
+- travis-cargo doc
 after_success:
-    - git config user.name "Travis-CI Doc Bot"
-    - git config user.email "willusher.life@gmail.com"
-    - travis-cargo --only stable doc-upload
+- git config user.name "Travis-CI Doc Bot"
+- git config user.email "willusher.life@gmail.com"
+- travis-cargo --only stable doc-upload
 env:
   global:
-    secure: Tcwn04OZmCAntcLiAMoOJwgIW6r55veMD3d4Yy+qco6KE8FCnYww8zsp1vb4BeRe6asVxsPxJgP2EZeoDdPayZqTAgCw7AVVL1umlhik8XN86cm/BcTDbu7azF8PS0LFh7HaAEarRYBlBn7mFpLZwKjoGGoMxwsKsbmdnCZz9Yk=
+    secure: mxVSh4jFo4F1TXFBbdRIIWYsvVasjXe0EMWokpxtIiLZHtdDE43J3JSlNPGGGr+/W4X/xOnARaGGFH8a69KCLRvyDldeCPJ6ceMzZRNSj8VVGXDqZ/SSAkJzBfy+Cw1UyTj6nwyGih83sO087DZbsu3a1FVzILTo5QOJrEGpAnmGKttXzY5d/gZCkVm30pdumxSg6OC9KJ/Nd4BrDWFTzmslLsyVWZKvAb6ANxmvwvEL0GPvAK7nt3YmyI4xoYZnQRyq8fCokVeo189k00jJtq6jC0rqwUpkg7whliiNKdpac5Bc2uRLxSjIG9TRdS50DGChFhtD4xI1O2Rm465uU064yOb5LyXcR8708F6TiOSaD6Q8jc4yXJHVf2rFtKVnqS6/XFIgZ4Jj3Kf4EhmujDegnXdQNtn6vBks/f4+AJPtgRoSW0sNwjOlsrP5RF8+Jda08yJuoTjQbcZt4L1UEQx8BLio+sSFj5BDgMSC9XVHgYOvKXORKkaA4DpKICfmQCSTae3fn0Lw7tpUav78e1SOC45cbe9nCM0DXstbSqfqqdsbZL9yPsHXsJiYgOYghCeV9vsVo1yF5FW4VdZt2BQDWG9uC/h5jGqmn5l++XDtCfskp0/PC/n7ne5d4X78wl6fLcmO0Glz9LSMgEt0QT4kvvDRV4iln2jAVH8sZGs=

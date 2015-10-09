@@ -1,7 +1,19 @@
 [package]
 name = "bspline"
 version = "0.1.0"
-authors = ["Will Usher <willusher.life@gmail.com>"]
+authors = ["Will Usher <will@willusher.io>"]
+
+description = "A simple generic library for computing B-splines"
+homepage = "https://github.com/Twinklebear/bspline"
+documentation = "http://www.willusher.io/bspline/bspline/"
+repository = "https://github.com/Twinklebear/bspline"
+readme = "README.md"
+keywords = ["curve", "spline", "b-spline"]
+license = "MIT"
+
+exclude = [
+	".travis.yml",
+]
 
 [dev-dependencies]
 image ="0.3.14"
