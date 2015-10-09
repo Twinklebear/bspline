@@ -1,7 +1,50 @@
+//! [![logo](http://i.imgur.com/dnpEXyh.jpg)](http://i.imgur.com/RUEw8EW.png)
+//!
+//! bspline
+//! ===
+//! A library for computing B-spline interpolating curves on generic control points. bspline can
+//! be used to evaluate B-splines of varying orders on any type that can be linearly interpolated,
+//! ranging from floats, positions, RGB colors to transformation matrices and so on.
+//!
+//! The bspline logo was generated using this library with a cubic B-spline in 2D for the positioning
+//! of the curve and a quadratic B-spline in RGB space to color it (check out the
+//! [logo](https://github.com/Twinklebear/bspline/blob/master/examples/logo.rs) example!). Other
+//! much simpler examples of 1D and 2D quadratic, cubic and quartic B-splines can also be found in
+//! the [examples](https://github.com/Twinklebear/bspline/tree/master/examples).
+//!
+//! # Readings on B-splines
+//! The library assumes you are familiar at some level with how B-splines work, e.g. how
+//! control points and knots and effect the curve produced. No interactive
+//! editor is provided (at least currently). Some good places to start reading about B-splines to
+//! effectively use this library can be found below.
+//!
+//! - [Wikipedia page on B-splines](https://en.wikipedia.org/wiki/B-spline)
+//! - [Fundamentals of Computer Graphics](http://www.amazon.com/Fundamentals-Computer-Graphics-Peter-Shirley/dp/1568814690)
+//! (has a good chapter on curves)
+//! - [Splines and B-splines: An Introduction](http://www.uio.no/studier/emner/matnat/ifi/INF-MAT5340/v07/undervisningsmateriale/kap1.pdf)
+//! - [Geometric Modelling](http://atrey.karlin.mff.cuni.cz/projekty/vrr/doc/grafika/geometric%20modelling.pdf)
+//! - [A nice set of interactive examples](https://www.ibiblio.org/e-notes/Splines/Intro.htm)
+//!
+
 use std::ops::{Mul, Add};
 use std::slice::Iter;
 
+/// The interpolate trait is used to linearly interpolate between two types (or in the
+/// case of Quaternions, spherically linearly interpolate). The B-spline curve uses this
+/// trait to compute points on the curve for the given parameter value.
+///
+/// A default implementation of this trait is provided for all `T` that are `Mul<f32, Output = T>
+/// + Add<Output = T> + Copy` since the interpolation provided by the trait is expected to be
+/// a simple linear interpolation.
 pub trait Interpolate {
+    /// Linearly interpolate between `self` and `other` using `t`, for example with floats:
+    ///
+    /// ```text
+    /// self * (1.0 - t) + other * t
+    /// ```
+    ///
+    /// If the result returned is not a correct linear interpolation of the values the
+    /// curve produced using the value may not be correct.
     fn interpolate(&self, other: &Self, t: f32) -> Self;
 }
 
@@ -11,25 +54,28 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
     }
 }
 
-/// Structure for computing the B-spline with the given control points
-/// and knots.
+/// Represents a B-spline that will use polynomials of the specified degree to interpolate
+/// between the control points given the knots.
 pub struct BSpline<T: Interpolate + Copy> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
     /// Control points for the curve
     control_points: Vec<T>,
-    /// TODO: What is a good description for the knots?
+    /// The knot vector
     knots: Vec<f32>,
 }
 
 impl<T: Interpolate + Copy> BSpline<T> {
-    /// Create a new B-spline curve of the desired degree that will blend between
-    /// the passed control points using the knots. The knots should be sorted in ascending
+    /// Create a new B-spline curve of the desired `degree` that will interpolate
+    /// the `control_points` using the `knots`. The knots should be sorted in non-decreasing
     /// order, otherwise they will be sorted for you which may lead to undesired knots
-    /// for control points
+    /// for control points. Note that this is in terms of the interpolating polynomial degree,
+    /// if you are familiar with the convention of "B-spline curve order" the degree is `curve_order - 1`.
+    ///
+    /// Your curve must have a valid number of control points and knots or the function will panic. A B-spline
+    /// curve requires at least as many control points as the degree (`control_points.len() >=
+    /// degree`) and the number of knots should be equal to `control_points.len() + degree + 1`.
     pub fn new(degree: usize, control_points: Vec<T>, mut knots: Vec<f32>) -> BSpline<T> {
-        // TODO: Maybe a ctor for cardinal curves that will check we have the right number of
-        // knots? Is this check correct?
         if control_points.len() < degree {
             panic!("Too few control points for curve");
         }
@@ -40,11 +86,11 @@ impl<T: Interpolate + Copy> BSpline<T> {
         knots.sort_by(|a, b| a.partial_cmp(b).unwrap());
         BSpline { degree: degree, control_points: control_points, knots: knots }
     }
-    /// Compute a point on the curve at `t`
-    /// TODO: Handling of out of bounds t values? Are t values not in the domain considered
-    /// out of range? The extra `degree` values are just for when we're going down the tree
-    /// to find the interpolated values there right?
+    /// Compute a point on the curve at `t`, the parameter **must** be in the inclusive range
+    /// of values returned by `knot_domain`. If `t` is out of bounds this function will assert
+    /// on debug builds and on release builds you'll likely get an out of bounds crash.
     pub fn point(&self, t: f32) -> T {
+        debug_assert!(t >= self.knot_domain().0 && t <= self.knot_domain().1);
         // Find the first index with a knot value greater than the t we're searching for. We want
         // to find i such that: knot[i] <= t < knot[i + 1]
         let i = match upper_bounds(&self.knots[..], t) {
@@ -54,16 +100,18 @@ impl<T: Interpolate + Copy> BSpline<T> {
         };
         self.de_boors(t, self.degree, i)
     }
-    /// Get an iterator over the control points
+    /// Get an iterator over the control points.
     pub fn control_points(&self) -> Iter<T> {
         self.control_points.iter()
     }
-    /// Get an iterator over the knots
+    /// Get an iterator over the knots.
     pub fn knots(&self) -> Iter<f32> {
         self.knots.iter()
     }
-    /// Get the min and max knot domain values for finding the t range to compute
-    /// the curve over
+    /// Get the min and max knot domain values for finding the `t` range to compute
+    /// the curve over. The curve is only defined over this range, passing a `t` value
+    /// out of this range will assert on debug builds and likely result in a crash on
+    /// release builds.
     pub fn knot_domain(&self) -> (f32, f32) {
         (self.knots[self.degree], self.knots[self.knots.len() - 1 - self.degree])
     }
