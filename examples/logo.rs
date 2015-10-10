@@ -119,7 +119,7 @@ fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, 
     let step_size = 0.001;
     let t_range = spline.knot_domain();
     let steps = ((t_range.1 - t_range.0) / step_size) as usize;
-    for s in 0..steps {
+    for s in 0..steps + 1 {
         let t = step_size * s as f32 + t_range.0;
         let pt = spline.point(t);
         let color = colors.point(t).to_srgb();
