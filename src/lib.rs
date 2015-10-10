@@ -27,6 +27,7 @@
 //!
 
 use std::ops::{Mul, Add};
+use std::fmt::Debug;
 use std::slice::Iter;
 
 /// The interpolate trait is used to linearly interpolate between two types (or in the
@@ -56,7 +57,7 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
 
 /// Represents a B-spline that will use polynomials of the specified degree to interpolate
 /// between the control points given the knots.
-pub struct BSpline<T: Interpolate + Copy> {
+pub struct BSpline<T: Interpolate + Copy + Debug> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
     /// Control points for the curve
@@ -65,7 +66,7 @@ pub struct BSpline<T: Interpolate + Copy> {
     knots: Vec<f32>,
 }
 
-impl<T: Interpolate + Copy> BSpline<T> {
+impl<T: Interpolate + Copy + Debug> BSpline<T> {
     /// Create a new B-spline curve of the desired `degree` that will interpolate
     /// the `control_points` using the `knots`. The knots should be sorted in non-decreasing
     /// order, otherwise they will be sorted for you which may lead to undesired knots
@@ -98,7 +99,8 @@ impl<T: Interpolate + Copy> BSpline<T> {
             Some(x) => x,
             None => self.knots.len() - self.degree - 1,
         };
-        self.de_boors(t, self.degree, i)
+        //self.de_boor(t, self.degree, i)
+        self.de_boor_iterative(t, i)
     }
     /// Get an iterator over the control points.
     pub fn control_points(&self) -> Iter<T> {
@@ -121,13 +123,29 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// iterative one and recursively compute the weights our interpolation at
     /// each level is no longer linear, which makes it harder to support things like
     /// Quaternions.
-    fn de_boors(&self, t: f32, k: usize, i: usize) -> T {
+    fn de_boor(&self, t: f32, k: usize, i: usize) -> T {
         if k == 0 {
             self.control_points[i - 1]
         } else {
             let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
-            self.de_boors(t, k - 1, i - 1).interpolate(&self.de_boors(t, k - 1, i), alpha)
+            self.de_boor(t, k - 1, i - 1).interpolate(&self.de_boor(t, k - 1, i), alpha)
         }
+    }
+    fn de_boor_iterative(&self, t: f32, i_start: usize) -> T {
+        let mut tmp = Vec::with_capacity(self.degree + 1);
+        for j in 0..self.degree + 1 {
+            let p = j + i_start - self.degree - 1;
+            tmp.push(self.control_points[p]);
+        }
+        for lvl in 0..self.degree {
+            let k = lvl + 1;
+            for j in 0..self.degree - lvl {
+                let i = j + k + i_start - self.degree;
+                let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
+                tmp[j] = tmp[j].interpolate(&tmp[j + 1], alpha);
+            }
+        }
+        tmp[0]
     }
 }
 
@@ -191,6 +209,7 @@ mod test {
         let points = vec![Point::new(-1.0, 0.0), Point::new(0.0, 1.0),
                           Point::new(1.0, 1.0), Point::new(1.0, 2.0)];
         let knots = vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0];
+        println!("Making spline, pts = {:?}\nknots = {:?}", points, knots);
         let spline = BSpline::new(1, points, knots);
         let x = spline.point(1.5);
         println!("spline(1.5) = {:?}", x);
