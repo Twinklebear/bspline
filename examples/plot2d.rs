@@ -53,7 +53,6 @@ fn plot_2d(spline: &bspline::BSpline<Point>, plot: &mut [u8], plot_dim: (usize, 
     for pt in spline.control_points() {
         let ix = ((pt.x + offset.0) * scale.0) as isize;
         let iy = ((pt.y + offset.1) * scale.1) as isize;
-        // Plot a 4x4 red marker for each control point
         for y in iy - 3..iy + 3 {
             for x in ix - 3..ix + 3 {
                 if y >= 0 && y < plot_dim.1 as isize && x >= 0 && x < plot_dim.0 as isize {

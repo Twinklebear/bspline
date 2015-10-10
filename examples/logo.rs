@@ -136,12 +136,11 @@ fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, 
             }
         }
     }
-    // Draw the control points
+    // Plot a black marker for each control point
     if show_control_pts {
         for pt in spline.control_points() {
             let ix = ((pt.x + offset.0) * scale.0) as isize;
             let iy = ((pt.y + offset.1) * scale.1) as isize;
-            // Plot a black marker for each control point
             for y in iy - 3..iy + 3 {
                 for x in ix - 3..ix + 3 {
                     if y >= 0 && y < plot_dim.1 as isize && x >= 0 && x < plot_dim.0 as isize {
