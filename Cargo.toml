@@ -18,5 +18,5 @@ exclude = [
 ]
 
 [dev-dependencies]
-image ="0.3.14"
+image = "0.3.14"
 
