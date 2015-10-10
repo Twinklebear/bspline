@@ -19,7 +19,7 @@
 //! to an image and saving the output see the [examples](https://github.com/Twinklebear/bspline/tree/master/examples).
 //!
 //! ```rust
-//! let points = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0]
+//! let points = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0];
 //! let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
 //! let degree = 3;
 //! let spline = bspline::BSpline::new(degree, points, knots);
