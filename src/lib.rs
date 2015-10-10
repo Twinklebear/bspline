@@ -99,7 +99,6 @@ impl<T: Interpolate + Copy + Debug> BSpline<T> {
             Some(x) => x,
             None => self.knots.len() - self.degree - 1,
         };
-        //self.de_boor(t, self.degree, i)
         self.de_boor_iterative(t, i)
     }
     /// Get an iterator over the control points.
@@ -111,26 +110,17 @@ impl<T: Interpolate + Copy + Debug> BSpline<T> {
         self.knots.iter()
     }
     /// Get the min and max knot domain values for finding the `t` range to compute
-    /// the curve over. The curve is only defined over this range, passing a `t` value
-    /// out of this range will assert on debug builds and likely result in a crash on
-    /// release builds.
+    /// the curve over. The curve is only defined over this (inclusive) range, passing
+    /// a `t` value out of this range will assert on debug builds and likely result in
+    /// a crash on release builds.
     pub fn knot_domain(&self) -> (f32, f32) {
         (self.knots[self.degree], self.knots[self.knots.len() - 1 - self.degree])
     }
-    /// Recursively compute de Boor's B-spline algorithm. TODO: This is not so good,
-    /// compute it iteratively! Recursive version is just for a simple formualation
-    /// of the initial implementation. Could we do memo-ization? If we switch to an
-    /// iterative one and recursively compute the weights our interpolation at
-    /// each level is no longer linear, which makes it harder to support things like
-    /// Quaternions.
-    fn de_boor(&self, t: f32, k: usize, i: usize) -> T {
-        if k == 0 {
-            self.control_points[i - 1]
-        } else {
-            let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
-            self.de_boor(t, k - 1, i - 1).interpolate(&self.de_boor(t, k - 1, i), alpha)
-        }
-    }
+    /// Iteratively compute de Boor's B-spline algorithm, this computes the recursive
+    /// de Boor algorithm tree from the bottom up. At each level we use the results
+    /// from the previous one to compute this level and store the results in the
+    /// array indices we no longer need to compute the current level (the left one
+    /// used computing node j).
     fn de_boor_iterative(&self, t: f32, i_start: usize) -> T {
         let mut tmp = Vec::with_capacity(self.degree + 1);
         for j in 0..self.degree + 1 {
@@ -176,44 +166,54 @@ fn upper_bounds(data: &[f32], value: f32) -> Option<usize> {
 
 #[cfg(test)]
 mod test {
-    use std::ops::{Mul, Add};
-
     use super::BSpline;
 
-    #[derive(Copy, Clone, Debug)]
-    struct Point {
-        x: f32,
-        y: f32,
-    }
-    impl Point {
-        fn new(x: f32, y: f32) -> Point {
-            Point { x: x, y: y }
-        }
-    }
-    impl Mul<f32> for Point {
-        type Output = Point;
-        fn mul(self, rhs: f32) -> Point {
-            Point { x: self.x * rhs, y: self.y * rhs }
-        }
-    }
-    impl Add for Point {
-        type Output = Point;
-        fn add(self, rhs: Point) -> Point {
-            Point { x: self.x + rhs.x, y: self.y + rhs.y }
-        }
+    /// Check that the bspline returns the values we expect it to at various t values
+    fn check_bspline(spline: &BSpline<f32>, expect: &Vec<(f32, f32)>) -> bool {
+        expect.iter().fold(true, |ac, &(t, x)| ac && spline.point(t) == x)
     }
 
-    // TODO: Test on 1D functions? Re-write tests
     #[test]
     fn linear_bspline() {
-        let points = vec![Point::new(-1.0, 0.0), Point::new(0.0, 1.0),
-                          Point::new(1.0, 1.0), Point::new(1.0, 2.0)];
-        let knots = vec![0.0, 0.0, 1.0, 2.0, 3.0, 3.0];
-        println!("Making spline, pts = {:?}\nknots = {:?}", points, knots);
-        let spline = BSpline::new(1, points, knots);
-        let x = spline.point(1.5);
-        println!("spline(1.5) = {:?}", x);
-        assert!(x.x == 0.5 && x.y == 1.0);
+        let expect = vec![(0.0, 0.0), (0.2, 0.2), (0.4, 0.4), (0.6, 0.6),
+                          (0.8, 0.8), (1.0, 1.0)];
+        let points = vec![0.0, 1.0];
+        let knots = vec![0.0, 0.0, 1.0, 1.0];
+        let degree = 1;
+        let spline = BSpline::new(degree, points, knots);
+        assert!(check_bspline(&spline, &expect));
+    }
+    #[test]
+    fn quadratic_bspline() {
+        let expect = vec![(0.0, 0.0), (0.5, 0.125), (1.0, 0.5), (1.4, 0.74), (1.5, 0.75),
+                          (1.6, 0.74), (2.0, 0.5), (2.5, 0.125), (3.0, 0.0)];
+        let points = vec![0.0, 0.0, 1.0, 0.0, 0.0];
+        let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
+        let degree = 2;
+        let spline = BSpline::new(degree, points, knots);
+        assert!(check_bspline(&spline, &expect));
+    }
+    #[test]
+    fn cubic_bspline() {
+        let expect = vec![(-2.0, 0.0), (-1.5, 0.125), (-1.0, 1.0), (-0.6, 2.488),
+                           (0.0, 4.0), (0.5, 2.875), (1.5, 0.12500001), (2.0, 0.0)];
+        let points = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0];
+        let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
+        let degree = 3;
+        let spline = BSpline::new(degree, points, knots);
+        assert!(check_bspline(&spline, &expect));
+    }
+    #[test]
+    fn quartic_bspline() {
+        let expect = vec![(0.0, 0.0), (0.4, 0.0010666668), (1.0, 0.041666668),
+                          (1.5, 0.19791667), (2.0, 0.4583333), (2.5, 0.5989583),
+                          (3.0, 0.4583333), (3.2, 0.35206667), (4.1, 0.02733751),
+                          (4.5, 0.002604167), (5.0, 0.0)];
+        let points = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
+        let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
+        let degree = 4;
+        let spline = BSpline::new(degree, points, knots);
+        assert!(check_bspline(&spline, &expect));
     }
 }
 
