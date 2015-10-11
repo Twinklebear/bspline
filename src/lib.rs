@@ -41,7 +41,6 @@
 //!
 
 use std::ops::{Mul, Add};
-use std::fmt::Debug;
 use std::slice::Iter;
 
 /// The interpolate trait is used to linearly interpolate between two types (or in the
@@ -71,7 +70,7 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
 
 /// Represents a B-spline that will use polynomials of the specified degree to interpolate
 /// between the control points given the knots.
-pub struct BSpline<T: Interpolate + Copy + Debug> {
+pub struct BSpline<T: Interpolate + Copy> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
     /// Control points for the curve
@@ -80,7 +79,7 @@ pub struct BSpline<T: Interpolate + Copy + Debug> {
     knots: Vec<f32>,
 }
 
-impl<T: Interpolate + Copy + Debug> BSpline<T> {
+impl<T: Interpolate + Copy> BSpline<T> {
     /// Create a new B-spline curve of the desired `degree` that will interpolate
     /// the `control_points` using the `knots`. The knots should be sorted in non-decreasing
     /// order, otherwise they will be sorted for you which may lead to undesired knots
