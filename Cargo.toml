@@ -1,6 +1,6 @@
 [package]
 name = "bspline"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Will Usher <will@willusher.io>"]
 
 description = "A simple generic library for computing B-splines"
