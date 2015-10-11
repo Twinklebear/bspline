@@ -177,8 +177,9 @@ fn plot_quartic() {
 }
 
 fn main() {
-    plot_test();
     let divider: String = iter::repeat('-').take(80).collect();
+    plot_test();
+    println!("{}\n\n{}", divider, divider);
     plot_quadratic();
     println!("{}\n\n{}", divider, divider);
     plot_cubic();
