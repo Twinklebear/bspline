@@ -70,6 +70,7 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
 
 /// Represents a B-spline that will use polynomials of the specified degree to interpolate
 /// between the control points given the knots.
+#[derive(Clone)]
 pub struct BSpline<T: Interpolate + Copy> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
