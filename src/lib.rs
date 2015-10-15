@@ -113,7 +113,8 @@ impl<T: Interpolate + Copy> BSpline<T> {
             Some(x) => x,
             None => self.knots.len() - self.degree - 1,
         };
-        self.de_boor_iterative(t, i)
+        self.de_boor(t, self.degree, i)
+        //self.de_boor_iterative(t, i)
     }
     /// Get an iterator over the control points.
     pub fn control_points(&self) -> Iter<T> {
@@ -129,6 +130,20 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// a crash on release builds.
     pub fn knot_domain(&self) -> (f32, f32) {
         (self.knots[self.degree], self.knots[self.knots.len() - 1 - self.degree])
+    }
+    /// Recursively compute de Boor's B-spline algorithm. TODO: This is not so good,
+    /// compute it iteratively! Recursive version is just for a simple formualation
+    /// of the initial implementation. Could we do memo-ization? If we switch to an
+    /// iterative one and recursively compute the weights our interpolation at
+    /// each level is no longer linear, which makes it harder to support things like
+    /// Quaternions.
+    fn de_boor(&self, t: f32, k: usize, i: usize) -> T {
+        if k == 0 {
+            self.control_points[i - 1]
+        } else {
+            let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
+            self.de_boor(t, k - 1, i - 1).interpolate(&self.de_boor(t, k - 1, i), alpha)
+        }
     }
     /// Iteratively compute de Boor's B-spline algorithm, this computes the recursive
     /// de Boor algorithm tree from the bottom up. At each level we use the results
@@ -146,6 +161,9 @@ impl<T: Interpolate + Copy> BSpline<T> {
             for j in 0..self.degree - lvl {
                 let i = j + k + i_start - self.degree;
                 let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
+                if alpha.is_nan() {
+                    panic!("alpha has nans");
+                }
                 tmp[j] = tmp[j].interpolate(&tmp[j + 1], alpha);
             }
         }
