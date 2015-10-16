@@ -105,7 +105,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// of values returned by `knot_domain`. If `t` is out of bounds this function will assert
     /// on debug builds and on release builds you'll likely get an out of bounds crash.
     pub fn point(&self, t: f32) -> T {
-        debug_assert!(t >= self.knot_domain().0 && t <= self.knot_domain().1);
+        debug_assert!(t >= self.knot_domain().0 && t < self.knot_domain().1);
         // Find the first index with a knot value greater than the t we're searching for. We want
         // to find i such that: knot[i] <= t < knot[i + 1]
         let i = match upper_bounds(&self.knots[..], t) {
@@ -124,7 +124,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
         self.knots.iter()
     }
     /// Get the min and max knot domain values for finding the `t` range to compute
-    /// the curve over. The curve is only defined over this (inclusive) range, passing
+    /// the curve over. The curve is only defined over this range in [min, max), passing
     /// a `t` value out of this range will assert on debug builds and likely result in
     /// a crash on release builds.
     pub fn knot_domain(&self) -> (f32, f32) {
