@@ -148,9 +148,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
             for j in 0..self.degree - lvl {
                 let i = j + k + i_start - self.degree;
                 let alpha = (t - self.knots[i - 1]) / (self.knots[i + self.degree - k] - self.knots[i - 1]);
-                if alpha.is_nan() {
-                    panic!("alpha has nans");
-                }
+                debug_assert!(!alpha.is_nan());
                 tmp[j] = tmp[j].interpolate(&tmp[j + 1], alpha);
             }
         }
