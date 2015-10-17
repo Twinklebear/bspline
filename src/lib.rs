@@ -88,10 +88,10 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// if you are familiar with the convention of "B-spline curve order" the degree is `curve_order - 1`.
     ///
     /// Your curve must have a valid number of control points and knots or the function will panic. A B-spline
-    /// curve requires at least as many control points as the degree (`control_points.len() >=
+    /// curve requires at least as many control points as the degree (`control_points.len() >
     /// degree`) and the number of knots should be equal to `control_points.len() + degree + 1`.
     pub fn new(degree: usize, control_points: Vec<T>, mut knots: Vec<f32>) -> BSpline<T> {
-        if control_points.len() < degree {
+        if control_points.len() <= degree {
             panic!("Too few control points for curve");
         }
         if knots.len() != control_points.len() + degree + 1 {
