@@ -49,8 +49,9 @@ use std::fmt;
 /// trait to compute points on the curve for the given parameter value.
 ///
 /// A default implementation of this trait is provided for all `T` that are `Mul<f32, Output = T>
-/// + Add<Output = T> + Copy` since the interpolation provided by the trait is expected to be
-/// a simple linear interpolation.
+/// + Add<Output = T> + Copy` as these are the only operations needed to linearly interpolate the
+/// values. Any type implementing this trait should perform whatever the appropriate linear
+/// interpolaton is for the type.
 pub trait Interpolate {
     /// Linearly interpolate between `self` and `other` using `t`, for example with floats:
     ///
@@ -69,8 +70,8 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
     }
 }
 
-/// Represents a B-spline that will use polynomials of the specified degree to interpolate
-/// between the control points given the knots.
+/// Represents a B-spline curve that will use polynomials of the specified degree
+/// to interpolate between the control points given the knots.
 #[derive(Clone)]
 pub struct BSpline<T: Interpolate + Copy> {
     /// Degree of the polynomial that we use to make the curve segments
@@ -84,12 +85,12 @@ pub struct BSpline<T: Interpolate + Copy> {
 impl<T: Interpolate + Copy> BSpline<T> {
     /// Create a new B-spline curve of the desired `degree` that will interpolate
     /// the `control_points` using the `knots`. The knots should be sorted in non-decreasing
-    /// order, otherwise they will be sorted for you which may lead to undesired knots
-    /// for control points. Note that this is in terms of the interpolating polynomial degree,
-    /// if you are familiar with the convention of "B-spline curve order" the degree is `curve_order - 1`.
+    /// order otherwise they will be sorted for you, which may lead to undesired knots
+    /// for control points. Note that here we use the interpolating polynomial degree,
+    /// if you're familiar with the convention of "B-spline curve order" the degree is `curve_order - 1`.
     ///
     /// Your curve must have a valid number of control points and knots or the function will panic. A B-spline
-    /// curve requires at least as many control points as the degree (`control_points.len() >
+    /// curve requires at least as one more control point than the degree (`control_points.len() >
     /// degree`) and the number of knots should be equal to `control_points.len() + degree + 1`.
     pub fn new(degree: usize, control_points: Vec<T>, mut knots: Vec<f32>) -> BSpline<T> {
         if control_points.len() <= degree {
@@ -127,9 +128,9 @@ impl<T: Interpolate + Copy> BSpline<T> {
         self.knots.iter()
     }
     /// Get the min and max knot domain values for finding the `t` range to compute
-    /// the curve over. The curve is only defined over this inclusive range in [min, max],
-    /// passing a `t` value out of this range will assert on debug builds and likely result in
-    /// a crash on release builds.
+    /// the curve over. The curve is only defined over the inclusive range `[min, max]`,
+    /// passing a `t` value outside of this range will result in an assert on debug builds
+    /// and likely a crash on release builds.
     pub fn knot_domain(&self) -> (f32, f32) {
         (self.knots[self.degree], self.knots[self.knots.len() - 1 - self.degree])
     }
@@ -165,8 +166,8 @@ impl<T: Interpolate + Copy + fmt::Debug> fmt::Debug for BSpline<T> {
 }
 
 /// Return the index of the first element greater than the value passed.
-/// The data **must** be sorted.
-/// If no element greater than the value passed is found the function returns None.
+/// The data **must** be sorted. If no element greater than the value
+/// passed is found the function returns None.
 fn upper_bounds(data: &[f32], value: f32) -> Option<usize> {
     let mut first = 0usize;
     let mut step;
