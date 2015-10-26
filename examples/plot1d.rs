@@ -102,6 +102,7 @@ fn plot_quartic() {
     let spline = bspline::BSpline::new(degree, points, knots);
 
     println!("\tt range = {:?}", spline.knot_domain());
+    println!("spline = {:?}", spline);
 
     plot_1d(&spline, &mut plot[..], (plot_w, plot_h), (x_scale, y_scale), (0.0, y_offset));
     match image::save_buffer("quartic_1d.png", &plot[..], plot_w as u32, plot_h as u32, image::RGB(8)) {

@@ -141,6 +141,7 @@ fn plot_cubic() {
     let spline = bspline::BSpline::new(degree, points, knots);
 
     println!("\tt range = {:?}", spline.knot_domain());
+    println!("spline = {:?}", spline);
 
     plot_2d(&spline, &mut plot[..], plot_dim, scale, offset);
     match image::save_buffer("cubic_2d.png", &plot[..], plot_dim.0 as u32, plot_dim.1 as u32, image::RGB(8)) {
