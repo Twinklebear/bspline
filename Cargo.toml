@@ -1,8 +1,7 @@
 [package]
 name = "bspline"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Will Usher <will@willusher.io>"]
-
 description = "A simple generic library for computing B-splines"
 homepage = "https://github.com/Twinklebear/bspline"
 documentation = "http://www.willusher.io/bspline/bspline/"
@@ -18,5 +17,5 @@ exclude = [
 ]
 
 [dev-dependencies]
-image = "0.3.14"
+image = "0.4.0"
 
