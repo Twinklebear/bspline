@@ -42,7 +42,6 @@
 
 use std::ops::{Mul, Add};
 use std::slice::Iter;
-use std::fmt;
 
 /// The interpolate trait is used to linearly interpolate between two types (or in the
 /// case of Quaternions, spherically linearly interpolate). The B-spline curve uses this
@@ -72,7 +71,7 @@ impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
 
 /// Represents a B-spline curve that will use polynomials of the specified degree
 /// to interpolate between the control points given the knots.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BSpline<T: Interpolate + Copy> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
@@ -155,13 +154,6 @@ impl<T: Interpolate + Copy> BSpline<T> {
             }
         }
         tmp[0]
-    }
-}
-
-impl<T: Interpolate + Copy + fmt::Debug> fmt::Debug for BSpline<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "BSpline {{\n\tdegree: {},\n\tcontrol_points: {:?},\n\tknots: {:?}\n}}",
-               self.degree, self.control_points, self.knots)
     }
 }
 
