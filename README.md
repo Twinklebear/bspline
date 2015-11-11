@@ -14,6 +14,7 @@ the [examples](https://github.com/Twinklebear/bspline/tree/master/examples).
 
 Just grab the crate on [crates.io](https://crates.io/crates/bspline) and you're set!
 
+[![Crates.io](https://img.shields.io/crates/v/bspline.svg)](https://crates.io/crates/bspline)
 [![Build Status](https://travis-ci.org/Twinklebear/bspline.svg?branch=master)](https://travis-ci.org/Twinklebear/bspline)
 
 # Documentation
