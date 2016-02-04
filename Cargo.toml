@@ -17,5 +17,11 @@ exclude = [
 ]
 
 [dev-dependencies]
-image = "0.4.0"
+image = "0.6.1"
+
+[dependencies]
+clippy = { version = "0.0.37", optional = true }
+
+[features]
+unstable = ["clippy"]
 

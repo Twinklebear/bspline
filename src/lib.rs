@@ -40,6 +40,9 @@
 //! - [A nice set of interactive examples](https://www.ibiblio.org/e-notes/Splines/Intro.htm)
 //!
 
+#![cfg_attr(feature = "unstable", feature(plugin))]
+#![cfg_attr(feature = "unstable", plugin(clippy))]
+
 use std::ops::{Mul, Add};
 use std::slice::Iter;
 
