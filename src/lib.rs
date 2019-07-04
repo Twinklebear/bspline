@@ -40,9 +40,6 @@
 //! - [A nice set of interactive examples](https://www.ibiblio.org/e-notes/Splines/Intro.htm)
 //!
 
-#![cfg_attr(feature = "unstable", feature(plugin))]
-#![cfg_attr(feature = "unstable", plugin(clippy))]
-
 use std::ops::{Mul, Add};
 use std::slice::Iter;
 
@@ -103,7 +100,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
                 control_points.len() + degree + 1));
         }
         knots.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        BSpline { degree: degree, control_points: control_points, knots: knots }
+        BSpline { degree, control_points, knots }
     }
     /// Compute a point on the curve at `t`, the parameter **must** be in the inclusive range
     /// of values returned by `knot_domain`. If `t` is out of bounds this function will assert
@@ -143,7 +140,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// used computing node j).
     fn de_boor_iterative(&self, t: f32, i_start: usize) -> T {
         let mut tmp = Vec::with_capacity(self.degree + 1);
-        for j in 0..self.degree + 1 {
+        for j in 0..=self.degree {
             let p = j + i_start - self.degree - 1;
             tmp.push(self.control_points[p]);
         }
