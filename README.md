@@ -15,11 +15,11 @@ the [examples](https://github.com/Twinklebear/bspline/tree/master/examples).
 Just grab the crate on [crates.io](https://crates.io/crates/bspline) and you're set!
 
 [![Crates.io](https://img.shields.io/crates/v/bspline.svg)](https://crates.io/crates/bspline)
-[![Build Status](https://travis-ci.org/Twinklebear/bspline.svg?branch=master)](https://travis-ci.org/Twinklebear/bspline)
+![Build Status](https://github.com/Twinklebear/bspline/workflows/CI/badge.svg)
 
 # Documentation
 
-Rust doc can be found [here](http://www.willusher.io/bspline/bspline/).
+Rust doc can be found [here](https://docs.rs/bspline/).
 
 # 1D Example
 
