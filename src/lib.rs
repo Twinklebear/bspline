@@ -42,6 +42,8 @@
 
 use std::ops::{Mul, Add};
 use std::slice::Iter;
+extern crate num_traits;
+use num_traits::{Float, One};
 
 /// The interpolate trait is used to linearly interpolate between two types (or in the
 /// case of Quaternions, spherically linearly interpolate). The B-spline curve uses this
@@ -51,7 +53,7 @@ use std::slice::Iter;
 /// + Add<Output = T> + Copy` as these are the only operations needed to linearly interpolate the
 /// values. Any type implementing this trait should perform whatever the appropriate linear
 /// interpolaton is for the type.
-pub trait Interpolate {
+pub trait Interpolate<F> {
     /// Linearly interpolate between `self` and `other` using `t`, for example with floats:
     ///
     /// ```text
@@ -60,28 +62,29 @@ pub trait Interpolate {
     ///
     /// If the result returned is not a correct linear interpolation of the values the
     /// curve produced using the value may not be correct.
-    fn interpolate(&self, other: &Self, t: f32) -> Self;
+    fn interpolate(&self, other: &Self, t: F) -> Self;
 }
 
-impl<T: Mul<f32, Output = T> + Add<Output = T> + Copy> Interpolate for T {
-    fn interpolate(&self, other: &Self, t: f32) -> Self {
-        *self * (1.0 - t) + *other * t
+impl<T: Mul<F, Output = T> + Add<Output = T> + Copy, F: Float> Interpolate<F> for T {
+    fn interpolate(&self, other: &Self, t: F) -> Self {
+        let one: F = One::one();
+        *self * (one - t) + *other * t
     }
 }
 
 /// Represents a B-spline curve that will use polynomials of the specified degree
 /// to interpolate between the control points given the knots.
 #[derive(Clone, Debug)]
-pub struct BSpline<T: Interpolate + Copy> {
+pub struct BSpline<T: Interpolate<F> + Copy, F: Float> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
     /// Control points for the curve
     control_points: Vec<T>,
     /// The knot vector
-    knots: Vec<f32>,
+    knots: Vec<F>,
 }
 
-impl<T: Interpolate + Copy> BSpline<T> {
+impl<T: Interpolate<F> + Copy, F: Float> BSpline<T, F> {
     /// Create a new B-spline curve of the desired `degree` that will interpolate
     /// the `control_points` using the `knots`. The knots should be sorted in non-decreasing
     /// order otherwise they will be sorted for you, which may lead to undesired knots
@@ -91,7 +94,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// Your curve must have a valid number of control points and knots or the function will panic. A B-spline
     /// curve requires at least as one more control point than the degree (`control_points.len() >
     /// degree`) and the number of knots should be equal to `control_points.len() + degree + 1`.
-    pub fn new(degree: usize, control_points: Vec<T>, mut knots: Vec<f32>) -> BSpline<T> {
+    pub fn new(degree: usize, control_points: Vec<T>, mut knots: Vec<F>) -> BSpline<T, F> {
         if control_points.len() <= degree {
             panic!("Too few control points for curve");
         }
@@ -105,7 +108,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// Compute a point on the curve at `t`, the parameter **must** be in the inclusive range
     /// of values returned by `knot_domain`. If `t` is out of bounds this function will assert
     /// on debug builds and on release builds you'll likely get an out of bounds crash.
-    pub fn point(&self, t: f32) -> T {
+    pub fn point(&self, t: F) -> T {
         debug_assert!(t >= self.knot_domain().0 && t <= self.knot_domain().1);
         // Find the first index with a knot value greater than the t we're searching for. We want
         // to find i such that: knot[i] <= t < knot[i + 1]
@@ -123,14 +126,14 @@ impl<T: Interpolate + Copy> BSpline<T> {
         self.control_points.iter()
     }
     /// Get an iterator over the knots.
-    pub fn knots(&self) -> Iter<f32> {
+    pub fn knots(&self) -> Iter<F> {
         self.knots.iter()
     }
     /// Get the min and max knot domain values for finding the `t` range to compute
     /// the curve over. The curve is only defined over the inclusive range `[min, max]`,
     /// passing a `t` value outside of this range will result in an assert on debug builds
     /// and likely a crash on release builds.
-    pub fn knot_domain(&self) -> (f32, f32) {
+    pub fn knot_domain(&self) -> (F, F) {
         (self.knots[self.degree], self.knots[self.knots.len() - 1 - self.degree])
     }
     /// Iteratively compute de Boor's B-spline algorithm, this computes the recursive
@@ -138,7 +141,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
     /// from the previous one to compute this level and store the results in the
     /// array indices we no longer need to compute the current level (the left one
     /// used computing node j).
-    fn de_boor_iterative(&self, t: f32, i_start: usize) -> T {
+    fn de_boor_iterative(&self, t: F, i_start: usize) -> T {
         let mut tmp = Vec::with_capacity(self.degree + 1);
         for j in 0..=self.degree {
             let p = j + i_start - self.degree - 1;
@@ -160,7 +163,7 @@ impl<T: Interpolate + Copy> BSpline<T> {
 /// Return the index of the first element greater than the value passed.
 /// The data **must** be sorted. If no element greater than the value
 /// passed is found the function returns None.
-fn upper_bounds(data: &[f32], value: f32) -> Option<usize> {
+fn upper_bounds<F: Float>(data: &[F], value: F) -> Option<usize> {
     let mut first = 0usize;
     let mut step;
     let mut count = data.len() as isize;
@@ -185,50 +188,64 @@ fn upper_bounds(data: &[f32], value: f32) -> Option<usize> {
 #[cfg(test)]
 mod test {
     use super::BSpline;
+    use num_traits::Float;
+    use std::ops::{Mul, Add};
 
     /// Check that the bspline returns the values we expect it to at various t values
-    fn check_bspline(spline: &BSpline<f32>, expect: &Vec<(f32, f32)>) -> bool {
+    fn check_bspline<T: Mul<F, Output = T> + Add<Output = T> + Copy + PartialOrd, F: Float>(spline: &BSpline<T, F>, expect: &Vec<(F, T)>) -> bool {
         expect.iter().fold(true, |ac, &(t, x)| ac && spline.point(t) == x)
     }
 
     #[test]
     fn linear_bspline() {
-        let expect = vec![(0.0, 0.0), (0.2, 0.2), (0.4, 0.4), (0.6, 0.6),
+        let expect: Vec<(f32, f32)> = vec![(0.0, 0.0), (0.2, 0.2), (0.4, 0.4), (0.6, 0.6),
                           (0.8, 0.8), (1.0, 1.0)];
-        let points = vec![0.0, 1.0];
-        let knots = vec![0.0, 0.0, 1.0, 1.0];
+        let points: Vec<f32> = vec![0.0, 1.0];
+        let knots: Vec<f32> = vec![0.0, 0.0, 1.0, 1.0];
         let degree = 1;
         let spline = BSpline::new(degree, points, knots);
         assert!(check_bspline(&spline, &expect));
     }
     #[test]
     fn quadratic_bspline() {
-        let expect = vec![(0.0, 0.0), (0.5, 0.125), (1.0, 0.5), (1.4, 0.74), (1.5, 0.75),
+        let expect: Vec<(f32, f32)> = vec![(0.0, 0.0), (0.5, 0.125), (1.0, 0.5), (1.4, 0.74), (1.5, 0.75),
                           (1.6, 0.74), (2.0, 0.5), (2.5, 0.125), (3.0, 0.0)];
-        let points = vec![0.0, 0.0, 1.0, 0.0, 0.0];
-        let knots = vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
+        let points: Vec<f32> = vec![0.0, 0.0, 1.0, 0.0, 0.0];
+        let knots: Vec<f32> = vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 3.0, 3.0];
         let degree = 2;
         let spline = BSpline::new(degree, points, knots);
         assert!(check_bspline(&spline, &expect));
     }
     #[test]
     fn cubic_bspline() {
-        let expect = vec![(-2.0, 0.0), (-1.5, 0.125), (-1.0, 1.0), (-0.6, 2.488),
+        let expect: Vec<(f32, f32)> = vec![(-2.0, 0.0), (-1.5, 0.125), (-1.0, 1.0), (-0.6, 2.488),
                            (0.0, 4.0), (0.5, 2.875), (1.5, 0.12500001), (2.0, 0.0)];
-        let points = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0];
-        let knots = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
+        let points: Vec<f32> = vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0];
+        let knots: Vec<f32> = vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0];
         let degree = 3;
         let spline = BSpline::new(degree, points, knots);
         assert!(check_bspline(&spline, &expect));
     }
     #[test]
     fn quartic_bspline() {
-        let expect = vec![(0.0, 0.0), (0.4, 0.0010666668), (1.0, 0.041666668),
+        let expect: Vec<(f32, f32)> = vec![(0.0, 0.0), (0.4, 0.0010666668), (1.0, 0.041666668),
                           (1.5, 0.19791667), (2.0, 0.4583333), (2.5, 0.5989583),
                           (3.0, 0.4583333), (3.2, 0.35206667), (4.1, 0.02733751),
                           (4.5, 0.002604167), (5.0, 0.0)];
-        let points = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
-        let knots = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
+        let points: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
+        let knots: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
+        let degree = 4;
+        let spline = BSpline::new(degree, points, knots);
+        assert!(check_bspline(&spline, &expect));
+    }
+    #[test]
+    fn quartic_bspline_f64() {
+        let expect: Vec<(f64, f64)> = vec![(0.0, 0.0), (0.4, 0.001066666666666667), (1.0, 0.041666666666666664),
+                                           (1.5, 0.19791666666666666), (2.0, 0.45833333333333337), (2.5, 0.5989583333333334),
+                                           (3.0, 0.4583333333333333), (3.2, 0.3520666666666666), (4.1, 0.027337500000000046),
+                                           (4.5, 0.002604166666666666), (5.0, 0.0)];
+        let points: Vec<f64> = vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
+        let knots: Vec<f64> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0, 5.0];
         let degree = 4;
         let spline = BSpline::new(degree, points, knots);
         assert!(check_bspline(&spline, &expect));

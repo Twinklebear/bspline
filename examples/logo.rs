@@ -114,7 +114,7 @@ impl IndexMut<usize> for Colorf {
 
 /// Evaluate the B-spline and plot it to the image buffer passed. The colors and points splines
 /// should have the same t range.
-fn plot_2d(spline: &bspline::BSpline<Point>, colors: &bspline::BSpline<Colorf>, plot: &mut [u8],
+fn plot_2d(spline: &bspline::BSpline<Point, f32>, colors: &bspline::BSpline<Colorf, f32>, plot: &mut [u8],
            plot_dim: (usize, usize), scale: (f32, f32), offset: (f32, f32), show_control_pts: bool) {
     let step_size = 0.001;
     let t_range = spline.knot_domain();

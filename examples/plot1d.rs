@@ -4,7 +4,7 @@ extern crate bspline;
 use std::iter;
 
 /// Evaluate the B-spline and plot it to the image buffer passed
-fn plot_1d(spline: &bspline::BSpline<f32>, plot: &mut [u8], plot_dim: (usize, usize), scale: (f32, f32),
+fn plot_1d(spline: &bspline::BSpline<f32, f32>, plot: &mut [u8], plot_dim: (usize, usize), scale: (f32, f32),
            offset: (f32, f32)) {
     let step_size = 0.001;
     let t_range = spline.knot_domain();
