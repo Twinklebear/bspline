@@ -17,7 +17,7 @@ exclude = [
 ]
 
 [dependencies]
-nalgebra = "0.26"
+nalgebra = "0.23"
 
 [dev-dependencies]
 image = "0.21.2"
