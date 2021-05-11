@@ -43,7 +43,7 @@
 use std::ops::{Mul, Add};
 use std::slice::Iter;
 extern crate nalgebra;
-use nalgebra::RealField;
+use nalgebra as na;
 
 /// The interpolate trait is used to linearly interpolate between two types (or in the
 /// case of Quaternions, spherically linearly interpolate). The B-spline curve uses this
@@ -65,7 +65,7 @@ pub trait Interpolate<F> {
     fn interpolate(&self, other: &Self, t: F) -> Self;
 }
 
-impl<T: Mul<F, Output = T> + Add<Output = T> + Copy, F: RealField> Interpolate<F> for T {
+impl<T: Mul<F, Output = T> + Add<Output = T> + Copy, F: na::RealField> Interpolate<F> for T {
     fn interpolate(&self, other: &Self, t: F) -> Self {
         *self * (F::one() - t) + *other * t
     }
@@ -74,7 +74,7 @@ impl<T: Mul<F, Output = T> + Add<Output = T> + Copy, F: RealField> Interpolate<F
 /// Represents a B-spline curve that will use polynomials of the specified degree
 /// to interpolate between the control points given the knots.
 #[derive(Clone, Debug)]
-pub struct BSpline<T: Interpolate<F> + Copy, F: RealField> {
+pub struct BSpline<T: Interpolate<F> + Copy, F: na::RealField> {
     /// Degree of the polynomial that we use to make the curve segments
     degree: usize,
     /// Control points for the curve
@@ -83,7 +83,7 @@ pub struct BSpline<T: Interpolate<F> + Copy, F: RealField> {
     knots: Vec<F>,
 }
 
-impl<T: Interpolate<F> + Copy, F: RealField> BSpline<T, F> {
+impl<T: Interpolate<F> + Copy, F: na::RealField> BSpline<T, F> {
     /// Create a new B-spline curve of the desired `degree` that will interpolate
     /// the `control_points` using the `knots`. The knots should be sorted in non-decreasing
     /// order otherwise they will be sorted for you, which may lead to undesired knots
@@ -162,7 +162,7 @@ impl<T: Interpolate<F> + Copy, F: RealField> BSpline<T, F> {
 /// Return the index of the first element greater than the value passed.
 /// The data **must** be sorted. If no element greater than the value
 /// passed is found the function returns None.
-fn upper_bounds<F: RealField>(data: &[F], value: F) -> Option<usize> {
+fn upper_bounds<F: na::RealField>(data: &[F], value: F) -> Option<usize> {
     let mut first = 0usize;
     let mut step;
     let mut count = data.len() as isize;
@@ -187,11 +187,11 @@ fn upper_bounds<F: RealField>(data: &[F], value: F) -> Option<usize> {
 #[cfg(test)]
 mod test {
     use super::BSpline;
-    use nalgebra::RealField;
+    use nalgebra as na;
     use std::ops::{Mul, Add};
 
     /// Check that the bspline returns the values we expect it to at various t values
-    fn check_bspline<T: Mul<F, Output = T> + Add<Output = T> + Copy + PartialOrd, F: RealField>(spline: &BSpline<T, F>, expect: &Vec<(F, T)>) -> bool {
+    fn check_bspline<T: Mul<F, Output = T> + Add<Output = T> + Copy + PartialOrd, F: na::RealField>(spline: &BSpline<T, F>, expect: &Vec<(F, T)>) -> bool {
         expect.iter().fold(true, |ac, &(t, x)| ac && spline.point(t) == x)
     }
 
