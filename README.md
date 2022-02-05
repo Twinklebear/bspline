@@ -47,3 +47,16 @@ effectively use this library can be found below.
 - [Geometric Modeling](http://atrey.karlin.mff.cuni.cz/projekty/vrr/doc/grafika/geometric%20modelling.pdf)
 - [A nice set of interactive examples](https://www.ibiblio.org/e-notes/Splines/Intro.htm)
 
+# nalgebra support
+
+[nalgerba](https://docs.rs/nalgebra/latest/nalgebra/) is one of the most popular linear algbera packages for Rust. To make this create compatible with it, you need to enable the `nalgebra-support` feature and then you can recreate the above example:
+
+```rust
+use nalgebra as na;
+
+let points = na::DVector::from(vec![0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0])
+let knots = na::DVector::from(vec![-2.0, -2.0, -2.0, -2.0, -1.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0]);
+let degree = 3;
+let spline = bspline::BSpline::new(degree, points, knots);
+```
+
