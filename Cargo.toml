@@ -16,9 +16,14 @@ exclude = [
 	".gitignore",
 ]
 
+[features]
+nalgebra-support = ["nalgebra"]
+
 [dependencies]
-nalgebra = "0.27"
+num-traits = "0.2"
+trait-set = "0.2"
+nalgebra = { version = "0.3", optional=true}
 
 [dev-dependencies]
-image = "0.21.2"
+image = "0.22"
 
