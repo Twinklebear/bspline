@@ -1,6 +1,6 @@
 [package]
 name = "bspline"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Will Usher <will@willusher.io>"]
 description = "A simple generic library for computing B-splines"
 homepage = "https://github.com/Twinklebear/bspline"
@@ -16,9 +16,14 @@ exclude = [
 	".gitignore",
 ]
 
+[features]
+nalgebra-support = ["nalgebra"]
+
 [dependencies]
 num-traits = "0.2"
+trait-set = "0.2"
+nalgebra = { version = "0.30", optional=true}
 
 [dev-dependencies]
-image = "0.21.2"
+image = "0.22"
 
