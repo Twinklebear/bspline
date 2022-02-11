@@ -111,11 +111,11 @@ impl<T: Interpolate<F> + Copy, F: Float> BSpline<T, F> {
             panic!("Too few control points for curve");
         }
         if knots.len() != control_points.len() + degree + 1 {
-            panic!(format!(
+            panic!(
                 "Invalid number of knots, got {}, expected {}",
                 knots.len(),
                 control_points.len() + degree + 1
-            ));
+            );
         }
         knots.sort_by(|a, b| a.partial_cmp(b).unwrap());
         BSpline {
